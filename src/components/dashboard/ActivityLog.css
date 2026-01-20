@@ -1,0 +1,93 @@
+.activity-log {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+
+.log-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.log-count {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.log-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-tertiary);
+  border-radius: var(--border-radius-sm);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.log-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background var(--transition-fast);
+}
+
+.log-entry:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.log-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.log-icon.success { color: var(--accent-green); }
+.log-icon.warning { color: var(--accent-orange); }
+.log-icon.error { color: var(--accent-red); }
+.log-icon.info { color: var(--accent-cyan); }
+
+.log-time {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  min-width: 70px;
+}
+
+.log-message {
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.log-entry.success .log-message {
+  color: var(--accent-green);
+}
+
+.log-entry.warning .log-message {
+  color: var(--accent-orange);
+}
+
+.log-entry.error .log-message {
+  color: var(--accent-red);
+}
