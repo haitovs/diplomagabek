@@ -6,6 +6,7 @@ import {
   Clock,
   Combine,
   Hash,
+  Info,
   Pause,
   Play,
   RefreshCw,
@@ -16,6 +17,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { importRealNetworks } from '../../services/database/hashDB';
+import { generateMockHash } from '../../services/database/mockGenerator';
 import {
   PRESET_MASKS,
   WORDLISTS,
@@ -48,6 +50,7 @@ function AttackPanel() {
   const [hybridMask, setHybridMask] = useState('?d?d?d');
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const isElectron = !!window.electronAPI;
 
   // Set target hash from selection
   useEffect(() => {
@@ -79,14 +82,13 @@ function AttackPanel() {
   };
 
   const handleScanNetworks = async () => {
-    if (window.electronAPI) {
+    if (isElectron) {
       setIsScanning(true);
       try {
         const result = await window.electronAPI.scanNetworks();
         if (result.success && result.networks.length > 0) {
           importRealNetworks(database, result.networks);
           refreshDatabase();
-          // Auto select first found if no target
           if (!targetHash && result.networks.length > 0) {
             const firstReal = database.hashes.find(h => h.ssid === result.networks[0].ssid);
             if (firstReal) {
@@ -101,7 +103,30 @@ function AttackPanel() {
         setIsScanning(false);
       }
     } else {
-      alert("Scanning is only available in the Electron app.");
+      // Web / server mode — generate simulated networks
+      setIsScanning(true);
+      setTimeout(() => {
+        const mockNets = [];
+        for (let i = 0; i < 5; i++) {
+          const m = generateMockHash(Date.now() + i);
+          mockNets.push({
+            ssid: m.ssid,
+            bssid: m.bssid,
+            rssi: String(-1 * (40 + Math.floor(Math.random() * 50))),
+            channel: String(Math.floor(Math.random() * 11) + 1),
+            security: m.type === 'PMKID' ? 'WPA2' : 'WPA',
+            type: 'Simulated',
+          });
+        }
+        importRealNetworks(database, mockNets);
+        refreshDatabase();
+        if (!targetHash && database.hashes.length > 0) {
+          const newest = database.hashes[database.hashes.length - 1];
+          setTargetHash(newest);
+          setSelectedHashes([newest]);
+        }
+        setIsScanning(false);
+      }, 1500);
     }
   };
 
@@ -135,6 +160,28 @@ function AttackPanel() {
 
   return (
     <div className="attack-panel">
+      {/* Server / Web mode info banner */}
+      {!isElectron && (
+        <motion.div
+          className="glass-card"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '12px',
+            padding: '12px 16px', marginBottom: '16px',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: '10px', fontSize: '13px', color: '#93c5fd',
+          }}
+        >
+          <Info size={18} style={{ flexShrink: 0, color: '#60a5fa' }} />
+          <span>
+            <strong>Simulation Mode</strong> — WiFi scanning is unavailable on the server.
+            Use <em>"Generate"</em> to create simulated networks for educational demonstration.
+          </span>
+        </motion.div>
+      )}
+
       <div className="attack-grid">
         {/* Target Selection */}
         <motion.div
@@ -150,10 +197,12 @@ function AttackPanel() {
                 className="btn btn-secondary btn-sm"
                 onClick={handleScanNetworks}
                 disabled={isScanning || isActive}
-                title="Scan for real networks"
+                title={isElectron ? 'Scan for real networks' : 'Generate simulated networks'}
               >
                 <RefreshCw size={14} className={isScanning ? 'spin' : ''} />
-                {isScanning ? ' Scanning...' : ' Scan'}
+                {isScanning
+                  ? (isElectron ? ' Scanning...' : ' Generating...')
+                  : (isElectron ? ' Scan' : ' Generate')}
               </button>
             </div>
           </div>
