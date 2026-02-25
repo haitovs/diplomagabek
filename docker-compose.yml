@@ -1,9 +1,7 @@
-version: "3.8"
-
 services:
-  frontend:
+  app:
     build: .
     container_name: agabek-hashcat
     ports:
-      - "4060:80"
+      - "4090:4090"
     restart: unless-stopped
