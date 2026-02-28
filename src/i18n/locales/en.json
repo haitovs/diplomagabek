@@ -1,0 +1,101 @@
+{
+  "app": {
+    "name": "HashCracker",
+    "subtitle": "WiFi Security Analysis Tool",
+    "version": "v1.0.0"
+  },
+  "header": {
+    "educational": "Educational",
+    "language": "Language"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "database": "Hash Database",
+    "attack": "Attack Panel",
+    "results": "Cracked Passwords",
+    "logs": "Activity Logs",
+    "tools": "Security Tools",
+    "about": "About Hashcat"
+  },
+  "page": {
+    "dashboard": "Dashboard",
+    "database": "Hash Database",
+    "attack": "Attack Panel",
+    "results": "Cracked Passwords",
+    "logs": "Activity Logs",
+    "tools": "Security Tools",
+    "about": "About Hashcat",
+    "activeAttack": "Attack in Progress"
+  },
+  "stats": {
+    "totalHashes": "Total Hashes",
+    "cracked": "Cracked",
+    "pending": "Pending",
+    "currentSpeed": "Current Speed",
+    "successRate": "{{value}}% success rate",
+    "currentlyCracking": "{{value}} currently cracking",
+    "idle": "Idle",
+    "attackInProgress": "Attack in progress"
+  },
+  "table": {
+    "search": "Search SSID, BSSID, ID...",
+    "all": "All",
+    "allStatus": "All Status",
+    "allTypes": "All Types",
+    "allComplexity": "All Complexity",
+    "id": "ID",
+    "ssid": "SSID",
+    "type": "Type",
+    "complexity": "Complexity",
+    "status": "Status",
+    "failureReason": "Failure Reason",
+    "actions": "Actions",
+    "addHash": "Add Hash",
+    "delete": "Delete",
+    "viewDetails": "View Details",
+    "attack": "Attack",
+    "noDetails": "No details",
+    "showing": "Showing {{shown}} of {{total}} hashes",
+    "performanceNotice": "(Displaying first 50 for performance)",
+    "hashDetails": "Hash Details",
+    "clientMac": "Client MAC",
+    "password": "Password",
+    "hash": "Hash",
+    "failure": "Failure"
+  },
+  "status": {
+    "pending": "Pending",
+    "cracking": "Cracking",
+    "cracked": "Cracked",
+    "failed": "Failed"
+  },
+  "complexity": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "unknown": "Unknown"
+  },
+  "sidebar": {
+    "totalHashes": "Total Hashes",
+    "cracked": "Cracked",
+    "successRate": "Success Rate",
+    "live": "LIVE"
+  },
+  "tools": {
+    "title": "Security Instruments",
+    "hashIdentifier": "Hash Type Identifier",
+    "hashInput": "Paste hash sample",
+    "detect": "Detect Type",
+    "passwordAnalyzer": "Password Strength Analyzer",
+    "passwordInput": "Enter password",
+    "analyze": "Analyze",
+    "maskBuilder": "Custom Mask Builder",
+    "lowercase": "Lowercase",
+    "uppercase": "Uppercase",
+    "digits": "Digits",
+    "symbols": "Symbols",
+    "buildMask": "Build Mask",
+    "generatedMask": "Generated Mask",
+    "score": "Score"
+  }
+}

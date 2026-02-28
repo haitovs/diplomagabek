@@ -5,22 +5,26 @@ import {
     FileText,
     Info,
     Key,
-    LayoutDashboard
+    LayoutDashboard,
+    Wrench
 } from 'lucide-react';
 import { useCracking } from '../../context/CrackingContext';
+import { useI18n } from '../../context/I18nContext';
 import './Sidebar.css';
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'database', label: 'Hash Database', icon: Database },
-  { id: 'attack', label: 'Attack Panel', icon: Crosshair },
-  { id: 'results', label: 'Cracked Passwords', icon: Key },
-  { id: 'logs', label: 'Activity Logs', icon: FileText },
-  { id: 'about', label: 'About Hashcat', icon: Info },
+  { id: 'dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { id: 'database', labelKey: 'nav.database', icon: Database },
+  { id: 'attack', labelKey: 'nav.attack', icon: Crosshair },
+  { id: 'results', labelKey: 'nav.results', icon: Key },
+  { id: 'logs', labelKey: 'nav.logs', icon: FileText },
+  { id: 'tools', labelKey: 'nav.tools', icon: Wrench },
+  { id: 'about', labelKey: 'nav.about', icon: Info },
 ];
 
 function Sidebar({ isOpen }) {
   const { activeTab, setActiveTab, stats, session } = useCracking();
+  const { t } = useI18n();
   
   return (
     <AnimatePresence>
@@ -44,7 +48,7 @@ function Sidebar({ isOpen }) {
                   onClick={() => setActiveTab(item.id)}
                 >
                   <Icon size={20} />
-                  <span>{item.label}</span>
+                  <span>{t(item.labelKey)}</span>
                   
                   {item.id === 'database' && stats && (
                     <span className="nav-badge">{stats.total}</span>
@@ -53,7 +57,7 @@ function Sidebar({ isOpen }) {
                     <span className="nav-badge success">{stats.cracked}</span>
                   )}
                   {item.id === 'attack' && session?.status === 'running' && (
-                    <span className="nav-badge warning animate-pulse">LIVE</span>
+                    <span className="nav-badge warning animate-pulse">{t('sidebar.live')}</span>
                   )}
                 </button>
               );
@@ -62,16 +66,16 @@ function Sidebar({ isOpen }) {
           
           <div className="sidebar-footer">
             <div className="sidebar-stats">
-              <div className="stat-row">
-                <span className="stat-label">Total Hashes</span>
+            <div className="stat-row">
+                <span className="stat-label">{t('sidebar.totalHashes')}</span>
                 <span className="stat-value">{stats?.total || 0}</span>
               </div>
               <div className="stat-row">
-                <span className="stat-label">Cracked</span>
+                <span className="stat-label">{t('sidebar.cracked')}</span>
                 <span className="stat-value success">{stats?.cracked || 0}</span>
               </div>
               <div className="stat-row">
-                <span className="stat-label">Success Rate</span>
+                <span className="stat-label">{t('sidebar.successRate')}</span>
                 <span className="stat-value">{stats?.successRate || 0}%</span>
               </div>
             </div>

@@ -10,11 +10,20 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
+import { useI18n } from '../../context/I18nContext';
 import { addHash, deleteHash, filterHashes, searchHashes, sortHashes } from '../../services/database/hashDB';
 import './HashTable.css';
 
+const STATUS_META = {
+  pending: { labelKey: 'status.pending', badge: 'badge-warning' },
+  cracking: { labelKey: 'status.cracking', badge: 'badge-info animate-pulse' },
+  cracked: { labelKey: 'status.cracked', badge: 'badge-success' },
+  failed: { labelKey: 'status.failed', badge: 'badge-danger' }
+};
+
 function HashTable() {
-  const { database, setDatabase, refreshDatabase, setActiveTab, setSelectedHashes } = useCracking();
+  const { database, refreshDatabase, setActiveTab, setSelectedHashes } = useCracking();
+  const { t } = useI18n();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({ status: 'all', type: 'all', complexity: 'all' });
@@ -41,6 +50,16 @@ function HashTable() {
     
     return result;
   }, [database, searchQuery, filters, sortConfig]);
+
+  const statusCounters = useMemo(() => {
+    const counters = { pending: 0, cracking: 0, cracked: 0, failed: 0 };
+    displayedHashes.forEach((hash) => {
+      if (counters[hash.status] !== undefined) {
+        counters[hash.status] += 1;
+      }
+    });
+    return counters;
+  }, [displayedHashes]);
   
   const handleSort = (key) => {
     setSortConfig(prev => ({
@@ -90,13 +109,12 @@ function HashTable() {
   };
   
   const getStatusBadge = (status) => {
-    const badges = {
-      pending: 'badge-warning',
-      cracking: 'badge-info animate-pulse',
-      cracked: 'badge-success',
-      failed: 'badge-danger'
-    };
-    return badges[status] || 'badge-info';
+    return STATUS_META[status]?.badge || 'badge-info';
+  };
+
+  const getStatusLabel = (status) => {
+    const key = STATUS_META[status]?.labelKey;
+    return key ? t(key) : status;
   };
   
   const getComplexityBadge = (complexity) => {
@@ -107,6 +125,13 @@ function HashTable() {
       unknown: 'badge-purple'
     };
     return badges[complexity] || 'badge-info';
+  };
+
+  const getComplexityLabel = (complexity) => {
+    if (!complexity || !['easy', 'medium', 'hard', 'unknown'].includes(complexity)) {
+      return t('complexity.unknown');
+    }
+    return t(`complexity.${complexity}`);
   };
   
   const SortIcon = ({ column }) => {
@@ -124,7 +149,7 @@ function HashTable() {
             <input
               type="text"
               className="input"
-              placeholder="Search SSID, BSSID, ID..."
+              placeholder={t('table.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -136,11 +161,11 @@ function HashTable() {
               value={filters.status}
               onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="cracking">Cracking</option>
-              <option value="cracked">Cracked</option>
-              <option value="failed">Failed</option>
+              <option value="all">{t('table.allStatus')}</option>
+              <option value="pending">{t('status.pending')}</option>
+              <option value="cracking">{t('status.cracking')}</option>
+              <option value="cracked">{t('status.cracked')}</option>
+              <option value="failed">{t('status.failed')}</option>
             </select>
             
             <select 
@@ -148,7 +173,7 @@ function HashTable() {
               value={filters.type}
               onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
             >
-              <option value="all">All Types</option>
+              <option value="all">{t('table.allTypes')}</option>
               <option value="PMKID">PMKID</option>
               <option value="EAPOL">EAPOL</option>
             </select>
@@ -158,24 +183,46 @@ function HashTable() {
               value={filters.complexity}
               onChange={(e) => setFilters(prev => ({ ...prev, complexity: e.target.value }))}
             >
-              <option value="all">All Complexity</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
+              <option value="all">{t('table.allComplexity')}</option>
+              <option value="easy">{t('complexity.easy')}</option>
+              <option value="medium">{t('complexity.medium')}</option>
+              <option value="hard">{t('complexity.hard')}</option>
             </select>
           </div>
         </div>
         
         <div className="toolbar-right">
           <button className="btn btn-secondary" onClick={handleAddHash}>
-            <Plus size={18} /> Add Hash
+            <Plus size={18} /> {t('table.addHash')}
           </button>
           {selectedIds.size > 0 && (
             <button className="btn btn-danger" onClick={handleDeleteSelected}>
-              <Trash2 size={18} /> Delete ({selectedIds.size})
+              <Trash2 size={18} /> {t('table.delete')} ({selectedIds.size})
             </button>
           )}
         </div>
+      </div>
+
+      <div className="status-strip">
+        <button
+          className={`status-chip ${filters.status === 'all' ? 'active' : ''}`}
+          onClick={() => setFilters(prev => ({ ...prev, status: 'all' }))}
+          type="button"
+        >
+          <span className="status-chip-label">{t('table.all')}</span>
+          <strong>{displayedHashes.length}</strong>
+        </button>
+        {Object.entries(STATUS_META).map(([status, meta]) => (
+          <button
+            key={status}
+            className={`status-chip ${filters.status === status ? 'active' : ''}`}
+            onClick={() => setFilters(prev => ({ ...prev, status }))}
+            type="button"
+          >
+            <span className={`badge ${meta.badge}`}>{t(meta.labelKey)}</span>
+            <strong>{statusCounters[status]}</strong>
+          </button>
+        ))}
       </div>
       
       {/* Table */}
@@ -191,21 +238,22 @@ function HashTable() {
                 />
               </th>
               <th className="sortable" onClick={() => handleSort('id')}>
-                ID <SortIcon column="id" />
+                {t('table.id')} <SortIcon column="id" />
               </th>
               <th className="sortable" onClick={() => handleSort('ssid')}>
-                SSID <SortIcon column="ssid" />
+                {t('table.ssid')} <SortIcon column="ssid" />
               </th>
               <th className="sortable" onClick={() => handleSort('type')}>
-                Type <SortIcon column="type" />
+                {t('table.type')} <SortIcon column="type" />
               </th>
               <th className="sortable" onClick={() => handleSort('complexity')}>
-                Complexity <SortIcon column="complexity" />
+                {t('table.complexity')} <SortIcon column="complexity" />
               </th>
               <th className="sortable" onClick={() => handleSort('status')}>
-                Status <SortIcon column="status" />
+                {t('table.status')} <SortIcon column="status" />
               </th>
-              <th>Actions</th>
+              <th>{t('table.failureReason')}</th>
+              <th>{t('table.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -240,25 +288,30 @@ function HashTable() {
                   </td>
                   <td>
                     <span className={`badge ${getComplexityBadge(hash.complexity)}`}>
-                      {hash.complexity}
+                      {getComplexityLabel(hash.complexity)}
                     </span>
                   </td>
                   <td>
                     <span className={`badge ${getStatusBadge(hash.status)}`}>
-                      {hash.status}
+                      {getStatusLabel(hash.status)}
                     </span>
+                  </td>
+                  <td className="fail-reason-cell">
+                    {hash.status === 'failed'
+                      ? (hash.failReason || t('table.noDetails'))
+                      : '—'}
                   </td>
                   <td className="col-actions">
                     <button 
                       className="btn-icon" 
-                      title="View Details"
+                      title={t('table.viewDetails')}
                       onClick={() => setViewHash(hash)}
                     >
                       <Eye size={16} />
                     </button>
                     <button 
                       className="btn-icon" 
-                      title="Attack"
+                      title={t('table.attack')}
                       onClick={() => handleAttackHash(hash)}
                       disabled={hash.status === 'cracked' || hash.status === 'cracking'}
                     >
@@ -274,9 +327,9 @@ function HashTable() {
       
       {/* Footer */}
       <div className="table-footer">
-        <span>Showing {Math.min(50, displayedHashes.length)} of {displayedHashes.length} hashes</span>
+        <span>{t('table.showing', { shown: Math.min(50, displayedHashes.length), total: displayedHashes.length })}</span>
         {displayedHashes.length > 50 && (
-          <span className="text-muted text-sm">(Displaying first 50 for performance)</span>
+          <span className="text-muted text-sm">{t('table.performanceNotice')}</span>
         )}
       </div>
       
@@ -298,17 +351,17 @@ function HashTable() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
-                <h3>Hash Details</h3>
+                <h3>{t('table.hashDetails')}</h3>
                 <button className="btn-ghost" onClick={() => setViewHash(null)}>×</button>
               </div>
               
               <div className="modal-content">
                 <div className="detail-row">
-                  <span className="detail-label">ID</span>
+                  <span className="detail-label">{t('table.id')}</span>
                   <span className="detail-value font-mono">{viewHash.id}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">SSID</span>
+                  <span className="detail-label">{t('table.ssid')}</span>
                   <span className="detail-value">{viewHash.ssid}</span>
                 </div>
                 <div className="detail-row">
@@ -316,29 +369,35 @@ function HashTable() {
                   <span className="detail-value font-mono">{viewHash.bssid}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Client MAC</span>
+                  <span className="detail-label">{t('table.clientMac')}</span>
                   <span className="detail-value font-mono">{viewHash.client}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Type</span>
+                  <span className="detail-label">{t('table.type')}</span>
                   <span className={`badge ${viewHash.type === 'PMKID' ? 'badge-info' : 'badge-purple'}`}>
                     {viewHash.type}
                   </span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Status</span>
+                  <span className="detail-label">{t('table.status')}</span>
                   <span className={`badge ${getStatusBadge(viewHash.status)}`}>
-                    {viewHash.status}
+                    {getStatusLabel(viewHash.status)}
                   </span>
                 </div>
+                {viewHash.status === 'failed' && (
+                  <div className="detail-row">
+                    <span className="detail-label">{t('table.failure')}</span>
+                    <span className="detail-value">{viewHash.failReason || t('table.noDetails')}</span>
+                  </div>
+                )}
                 {viewHash.status === 'cracked' && (
                   <div className="detail-row highlight">
-                    <span className="detail-label">Password</span>
+                    <span className="detail-label">{t('table.password')}</span>
                     <span className="detail-value font-mono password">{viewHash.password}</span>
                   </div>
                 )}
                 <div className="detail-row">
-                  <span className="detail-label">Hash</span>
+                  <span className="detail-label">{t('table.hash')}</span>
                   <div className="hash-display font-mono">{viewHash.hash}</div>
                 </div>
               </div>

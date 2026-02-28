@@ -32,12 +32,12 @@ import './AttackPanel.css';
 function AttackPanel() {
   const {
     database,
-    setDatabase,
     refreshDatabase,
     selectedHashes,
     setSelectedHashes,
     session,
     isActive,
+    isRealBackendEnabled,
     startAttack,
     pause,
     resume,
@@ -46,6 +46,7 @@ function AttackPanel() {
 
   const [attackMode, setAttackMode] = useState('dictionary');
   const [wordlist, setWordlist] = useState('rockyou_sample');
+  const [serverWordlistPath, setServerWordlistPath] = useState('');
   const [mask, setMask] = useState('?d?d?d?d?d?d?d?d');
   const [hybridMask, setHybridMask] = useState('?d?d?d');
   const [targetHash, setTargetHash] = useState(null);
@@ -75,7 +76,8 @@ function AttackPanel() {
 
     const options = {
       wordlist: wordlist,
-      mask: attackMode === 'bruteforce' ? mask : hybridMask
+      mask: attackMode === 'bruteforce' ? mask : hybridMask,
+      wordlistPath: serverWordlistPath.trim() || undefined
     };
 
     startAttack(targetHash, attackMode, options);
@@ -178,6 +180,27 @@ function AttackPanel() {
           <span>
             <strong>Simulation Mode</strong> — WiFi scanning is unavailable on the server.
             Use <em>"Generate"</em> to create simulated networks for educational demonstration.
+          </span>
+        </motion.div>
+      )}
+
+      {isRealBackendEnabled && (
+        <motion.div
+          className="glass-card"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '12px',
+            padding: '12px 16px', marginBottom: '16px',
+            background: 'rgba(34, 197, 94, 0.12)',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: '10px', fontSize: '13px', color: '#86efac',
+          }}
+        >
+          <Info size={18} style={{ flexShrink: 0, color: '#4ade80' }} />
+          <span>
+            <strong>Real Hashcat Mode</strong> is enabled. Dictionary attacks run on backend hashcat.
+            Brute-force and hybrid remain simulator mode unless backend support is added.
           </span>
         </motion.div>
       )}
@@ -311,6 +334,23 @@ function AttackPanel() {
                   ))}
                 </select>
                 <p className="config-desc">{WORDLISTS[wordlist]?.description}</p>
+
+                {isRealBackendEnabled && (
+                  <>
+                    <label className="mt-4">Server Wordlist Path (Optional)</label>
+                    <input
+                      type="text"
+                      className="input input-mono"
+                      value={serverWordlistPath}
+                      onChange={(event) => setServerWordlistPath(event.target.value)}
+                      placeholder="/opt/wordlists/rockyou.txt"
+                      disabled={isActive}
+                    />
+                    <p className="config-desc">
+                      Leave empty to use backend default `WORDLIST_PATH`.
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
@@ -408,14 +448,18 @@ function AttackPanel() {
               </button>
             ) : (
               <div className="control-buttons">
-                {session?.status === 'running' ? (
-                  <button className="btn btn-secondary" onClick={pause}>
-                    <Pause size={18} /> Pause
-                  </button>
-                ) : (
-                  <button className="btn btn-primary" onClick={resume}>
-                    <Play size={18} /> Resume
-                  </button>
+                {!isRealBackendEnabled && (
+                  <>
+                    {session?.status === 'running' ? (
+                      <button className="btn btn-secondary" onClick={pause}>
+                        <Pause size={18} /> Pause
+                      </button>
+                    ) : (
+                      <button className="btn btn-primary" onClick={resume}>
+                        <Play size={18} /> Resume
+                      </button>
+                    )}
+                  </>
                 )}
                 <button className="btn btn-danger" onClick={stop}>
                   <Square size={18} /> Stop

@@ -10,11 +10,14 @@ import ProgressChart from './components/dashboard/ProgressChart';
 import StatsCards from './components/dashboard/StatsCards';
 import HashTable from './components/database/HashTable';
 import CrackedList from './components/results/CrackedList';
+import SecurityTools from './components/tools/SecurityTools';
 import { CrackingProvider, useCracking } from './context/CrackingContext';
+import { useI18n } from './context/I18nContext';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { activeTab, session } = useCracking();
+  const { t } = useI18n();
   
   const renderContent = () => {
     switch (activeTab) {
@@ -37,7 +40,7 @@ function AppContent() {
       case 'logs':
         return (
           <div className="logs-page">
-            <h2>Full Activity Log</h2>
+            <h2>{t('nav.logs')}</h2>
             <div className="logs-container glass-card">
               <ActivityLog />
             </div>
@@ -45,6 +48,8 @@ function AppContent() {
         );
       case 'about':
         return <AboutHashcat />;
+      case 'tools':
+        return <SecurityTools />;
       default:
         return <StatsCards />;
     }
@@ -52,14 +57,15 @@ function AppContent() {
   
   const getPageTitle = () => {
     const titles = {
-      dashboard: 'Dashboard',
-      database: 'Hash Database',
-      attack: 'Attack Panel',
-      results: 'Cracked Passwords',
-      logs: 'Activity Logs',
-      about: 'About Hashcat'
+      dashboard: t('page.dashboard'),
+      database: t('page.database'),
+      attack: t('page.attack'),
+      results: t('page.results'),
+      logs: t('page.logs'),
+      tools: t('page.tools'),
+      about: t('page.about')
     };
-    return titles[activeTab] || 'Dashboard';
+    return titles[activeTab] || t('page.dashboard');
   };
   
   return (
@@ -73,7 +79,7 @@ function AppContent() {
           {session?.status === 'running' && (
             <div className="active-attack-badge">
               <span className="pulse-dot"></span>
-              Attack in Progress: {session.targetHash?.ssid}
+              {t('page.activeAttack')}: {session.targetHash?.ssid}
             </div>
           )}
         </div>

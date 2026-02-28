@@ -7,6 +7,9 @@ import { generateMockDatabase, generateMockHash, generatePreCrackedHashes } from
 
 const STORAGE_KEY = 'hashcracker_database';
 const SETTINGS_KEY = 'hashcracker_settings';
+const SEED_PROFILE = 'demo-v2-100-total-50-cracked';
+const INITIAL_TOTAL_HASHES = 100;
+const INITIAL_CRACKED_PERCENT = 50;
 
 // Initialize or load database
 export function initializeDatabase(forceReset = false) {
@@ -18,15 +21,19 @@ export function initializeDatabase(forceReset = false) {
 
   if (stored) {
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      if (parsed?.seedProfile === SEED_PROFILE) {
+        return parsed;
+      }
     } catch (e) {
       console.error('Failed to parse stored database:', e);
     }
   }
 
-  // Generate new database with 500 hashes, 10% pre-cracked
-  const database = generateMockDatabase(500);
-  const withCracked = generatePreCrackedHashes(database, 10);
+  // Generate new database with 100 hashes, 50% pre-cracked
+  const database = generateMockDatabase(INITIAL_TOTAL_HASHES);
+  const withCracked = generatePreCrackedHashes(database, INITIAL_CRACKED_PERCENT);
+  withCracked.seedProfile = SEED_PROFILE;
   saveDatabase(withCracked);
 
   return withCracked;

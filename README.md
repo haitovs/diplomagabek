@@ -6,10 +6,13 @@ A comprehensive educational React application simulating WiFi WPA/WPA2 password 
 
 ## ✨ Features
 
-- **500+ Mock WiFi Hashes** - Realistic hc22000 format WPA/WPA2 hashes
+- **100 Mock WiFi Hashes** - Realistic hc22000 format WPA/WPA2 hashes (50 pre-cracked demo baseline)
 - **Multiple Attack Modes** - Dictionary, Brute-force, and Hybrid attacks
 - **Real-time Dashboard** - Live progress, statistics, and activity logs
 - **Hash Database** - Search, filter, sort, and manage hashes
+- **Hash Status Dashboard** - Clear pending/cracking/cracked/failed visibility with filters
+- **Localization (i18n)** - English + Turkmen language support
+- **Optional Real Hashcat Backend** - Dictionary attacks via backend API + hashcat
 - **Password Export** - CSV, JSON, and Potfile formats
 - **Educational Content** - Learn about hashcat, masks, and attack strategies
 
@@ -24,6 +27,23 @@ npm run dev
 
 # 3. Open in browser
 # http://localhost:5173
+```
+
+### Full stack (frontend + backend API)
+```bash
+# Terminal 1 (frontend)
+npm run dev
+
+# Terminal 2 (backend API)
+npm run server:dev
+
+# Optional: enable real backend mode in frontend
+export VITE_HASHCAT_BACKEND_URL=http://localhost:8080
+```
+
+Or run both in one command:
+```bash
+npm run dev:full
 ```
 
 Or use the run script:
@@ -84,12 +104,51 @@ agabel-crack-with-hashcat/
 
 ## ⚠️ Disclaimer
 
-This is a **SIMULATION** for educational purposes only. It does not:
-- Interact with real WiFi networks
-- Execute actual hashcat commands
-- Capture real network traffic
+This project defaults to **SIMULATION** mode for educational purposes.
+It can optionally connect to a real backend hashcat API for authorized password recovery testing.
 
-All hashes and passwords are mock data generated for demonstration.
+Do not run attacks against systems without explicit permission.
+
+## 🌐 Localization (i18n)
+
+- Locale files live in `src/i18n/locales/`:
+  - `en.json`
+  - `tk.json`
+- Runtime i18n provider: `src/context/I18nContext.jsx`
+- Language switcher is in the top header.
+
+## 🧪 New Security Instruments
+
+The app includes a dedicated **Security Tools** page:
+1. Hash Type Identifier
+2. Password Strength Analyzer
+3. Custom Mask Builder
+
+Backend endpoints for these tools:
+- `POST /api/tools/hash-type`
+- `POST /api/tools/password-strength`
+- `POST /api/tools/mask-builder`
+
+## 🐳 Production Deployment (Server-side Wordlist Download)
+
+Production compose file:
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+What happens:
+1. `hashcat-api` container starts with `server/Dockerfile`
+2. `deploy/bootstrap-wordlist.sh` runs as entrypoint
+3. If `AUTO_DOWNLOAD_WORDLIST=true`, wordlist is downloaded on the server (not on local dev machine)
+4. App uses `/api` proxy to reach backend hashcat service
+
+Recommended env:
+- `AUTO_DOWNLOAD_WORDLIST=true`
+- `WORDLIST_URL=<trusted source>`
+- `WORDLIST_SHA256=<expected checksum>`
+- `WORDLIST_PATH=/opt/wordlists/rockyou.txt`
+
+If real backend mode is disabled, all cracking remains simulated.
 
 ## 🛠️ Tech Stack
 

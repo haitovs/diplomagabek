@@ -1,0 +1,101 @@
+{
+  "app": {
+    "name": "HashCracker",
+    "subtitle": "WiFi Howpsuzlyk Derňew Guraly",
+    "version": "v1.0.0"
+  },
+  "header": {
+    "educational": "Okuw Maksatly",
+    "language": "Dil"
+  },
+  "nav": {
+    "dashboard": "Dolandyryş Paneli",
+    "database": "Heş Bazasy",
+    "attack": "Hüjüm Paneli",
+    "results": "Açylan Parollar",
+    "logs": "Işjeňlik Žurnallary",
+    "tools": "Howpsuzlyk Gurallary",
+    "about": "Hashcat Barada"
+  },
+  "page": {
+    "dashboard": "Dolandyryş Paneli",
+    "database": "Heş Bazasy",
+    "attack": "Hüjüm Paneli",
+    "results": "Açylan Parollar",
+    "logs": "Işjeňlik Žurnallary",
+    "tools": "Howpsuzlyk Gurallary",
+    "about": "Hashcat Barada",
+    "activeAttack": "Hüjüm Dowam Edýär"
+  },
+  "stats": {
+    "totalHashes": "Jemi Heş",
+    "cracked": "Açyldy",
+    "pending": "Garaşylýar",
+    "currentSpeed": "Häzirki Tizlik",
+    "successRate": "{{value}}% üstünlik derejesi",
+    "currentlyCracking": "häzir açylýan: {{value}}",
+    "idle": "Boş",
+    "attackInProgress": "Hüjüm dowam edýär"
+  },
+  "table": {
+    "search": "SSID, BSSID, ID gözle...",
+    "all": "Hemmesi",
+    "allStatus": "Ähli Status",
+    "allTypes": "Ähli Görnüşler",
+    "allComplexity": "Ähli Çylşyrymlylyk",
+    "id": "ID",
+    "ssid": "SSID",
+    "type": "Görnüş",
+    "complexity": "Çylşyrymlylyk",
+    "status": "Status",
+    "failureReason": "Şowsuzlygyň Sebäbi",
+    "actions": "Amallar",
+    "addHash": "Heş Goş",
+    "delete": "Poz",
+    "viewDetails": "Jikme-jigi Gör",
+    "attack": "Hüjüm",
+    "noDetails": "Jikme-jik ýok",
+    "showing": "{{total}} heşden {{shown}} sany görkezilýär",
+    "performanceNotice": "(Öndürijilik üçin ilkinji 50 görkezilýär)",
+    "hashDetails": "Heşiň Maglumatlary",
+    "clientMac": "Müşderi MAC",
+    "password": "Parol",
+    "hash": "Heş",
+    "failure": "Şowsuzlyk"
+  },
+  "status": {
+    "pending": "Garaşylýar",
+    "cracking": "Açylýar",
+    "cracked": "Açyldy",
+    "failed": "Şowsuz"
+  },
+  "complexity": {
+    "easy": "Ýeňil",
+    "medium": "Orta",
+    "hard": "Kyn",
+    "unknown": "Näbelli"
+  },
+  "sidebar": {
+    "totalHashes": "Jemi Heş",
+    "cracked": "Açyldy",
+    "successRate": "Üstünlik Derejesi",
+    "live": "GÖNI"
+  },
+  "tools": {
+    "title": "Howpsuzlyk Gurallary",
+    "hashIdentifier": "Heş Görnüşini Kesgitleýji",
+    "hashInput": "Heş nusgasyny goýuň",
+    "detect": "Görnüşi Kesgitle",
+    "passwordAnalyzer": "Parol Güýç Analizi",
+    "passwordInput": "Parol giriziň",
+    "analyze": "Derňe",
+    "maskBuilder": "Ýörite Maska Düzediji",
+    "lowercase": "Kiçi harp",
+    "uppercase": "Uly harp",
+    "digits": "Sanlar",
+    "symbols": "Nyşanlar",
+    "buildMask": "Maska Gur",
+    "generatedMask": "Döredilen Maska",
+    "score": "Bal"
+  }
+}

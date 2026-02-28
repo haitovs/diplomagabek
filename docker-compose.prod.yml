@@ -1,0 +1,38 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_HASHCAT_BACKEND_URL: /api
+    container_name: hashcracker-web
+    ports:
+      - "4090:4090"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - hashcat-api
+    restart: unless-stopped
+
+  hashcat-api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: hashcat-api
+    environment:
+      AUTO_DOWNLOAD_WORDLIST: "true"
+      WORDLIST_URL: "https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt"
+      WORDLIST_PATH: "/opt/wordlists/rockyou.txt"
+      WORDLIST_DIR: "/opt/wordlists"
+      DATA_DIR: "/srv/hashcat-data"
+      # WORDLIST_SHA256: "<set_expected_sha256_here>"
+    volumes:
+      - wordlists:/opt/wordlists
+      - hashcat_data:/srv/hashcat-data
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  wordlists:
+  hashcat_data:

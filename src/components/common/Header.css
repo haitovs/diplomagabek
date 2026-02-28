@@ -79,6 +79,20 @@
   gap: 16px;
 }
 
+.language-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.language-select {
+  min-width: 110px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
 .header-version {
   font-family: var(--font-mono);
   font-size: 0.8rem;
@@ -95,5 +109,13 @@
   
   .header-badge {
     display: none;
+  }
+
+  .language-picker span {
+    display: none;
+  }
+
+  .language-select {
+    min-width: 90px;
   }
 }
