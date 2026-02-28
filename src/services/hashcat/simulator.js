@@ -28,34 +28,44 @@ export const MASK_CHARS = {
 
 // Preset masks
 export const PRESET_MASKS = [
-  { name: '8 Digits', mask: '?d?d?d?d?d?d?d?d', keyspace: Math.pow(10, 8) },
-  { name: '8 Lowercase', mask: '?l?l?l?l?l?l?l?l', keyspace: Math.pow(26, 8) },
-  { name: 'Common Pattern', mask: '?u?l?l?l?l?l?d?d', keyspace: 26 * Math.pow(26, 5) * 100 },
-  { name: 'Word + Year', mask: '?l?l?l?l?l?l?d?d?d?d', keyspace: Math.pow(26, 6) * 10000 },
-  { name: 'Complex 8', mask: '?a?a?a?a?a?a?a?a', keyspace: Math.pow(95, 8) }
+  { nameKey: 'attack.presets.eightDigits', mask: '?d?d?d?d?d?d?d?d', keyspace: Math.pow(10, 8) },
+  { nameKey: 'attack.presets.eightLowercase', mask: '?l?l?l?l?l?l?l?l', keyspace: Math.pow(26, 8) },
+  { nameKey: 'attack.presets.commonPattern', mask: '?u?l?l?l?l?l?d?d', keyspace: 26 * Math.pow(26, 5) * 100 },
+  { nameKey: 'attack.presets.wordPlusYear', mask: '?l?l?l?l?l?l?d?d?d?d', keyspace: Math.pow(26, 6) * 10000 },
+  { nameKey: 'attack.presets.complexEight', mask: '?a?a?a?a?a?a?a?a', keyspace: Math.pow(95, 8) }
 ];
 
 // Default wordlists
 export const WORDLISTS = {
-  common: {
-    name: 'Common Passwords',
-    size: 1000,
-    description: 'Most common passwords'
-  },
-  wifi_default: {
-    name: 'WiFi Defaults',
-    size: 500,
-    description: 'Default router passwords'
-  },
   rockyou_sample: {
-    name: 'RockYou Sample',
+    nameKey: 'wordlists.rockyouSample.name',
+    descriptionKey: 'wordlists.rockyouSample.description',
     size: 10000,
-    description: 'Sample from RockYou breach'
+    serverPath: '/opt/wordlists/rockyou_sample.txt'
   },
-  names_dates: {
-    name: 'Names & Dates',
+  rockyou: {
+    nameKey: 'wordlists.rockyou.name',
+    descriptionKey: 'wordlists.rockyou.description',
+    size: 14344392,
+    serverPath: '/opt/wordlists/rockyou.txt'
+  },
+  top_100k: {
+    nameKey: 'wordlists.top100k.name',
+    descriptionKey: 'wordlists.top100k.description',
+    size: 100000,
+    serverPath: '/opt/wordlists/top-100k.txt'
+  },
+  probable_v2: {
+    nameKey: 'wordlists.probableV2.name',
+    descriptionKey: 'wordlists.probableV2.description',
+    size: 1575000,
+    serverPath: '/opt/wordlists/probable-v2-top1575.txt'
+  },
+  wifi_defaults: {
+    nameKey: 'wordlists.wifiDefaults.name',
+    descriptionKey: 'wordlists.wifiDefaults.description',
     size: 5000,
-    description: 'Common names with dates'
+    serverPath: '/opt/wordlists/wifi-defaults.txt'
   }
 };
 
@@ -84,6 +94,7 @@ class CrackingSession {
     this.eta = null;
     this.intervalId = null;
     this.logs = [];
+    this.logSequence = 0;
   }
   
   getElapsedTime() {
@@ -92,11 +103,19 @@ class CrackingSession {
     return (now - this.startTime - this.totalPauseTime) / 1000;
   }
   
-  addLog(message, type = 'info') {
+  addLog(entryOrMessage, type = 'info') {
+    const entry = typeof entryOrMessage === 'string'
+      ? { message: entryOrMessage, type }
+      : { ...entryOrMessage };
+    this.logSequence += 1;
+
     this.logs.push({
+      id: `simlog_${Date.now()}_${this.logSequence}`,
       timestamp: new Date().toISOString(),
-      message,
-      type
+      message: entry.message || '',
+      key: entry.key || null,
+      params: entry.params || null,
+      type: entry.type || type
     });
     // Keep only last 100 logs
     if (this.logs.length > 100) {
@@ -175,7 +194,7 @@ function generateCandidate(mask) {
 }
 
 // Dictionary attack simulation
-function dictionaryTick(hash, wordlistSize, onUpdate) {
+function dictionaryTick(hash, onUpdate) {
   // Simulate testing ~500-2000 passwords per second
   const batchSize = 50 + Math.floor(Math.random() * 50);
   session.candidatesTested += batchSize;
@@ -196,7 +215,11 @@ function dictionaryTick(hash, wordlistSize, onUpdate) {
   if (Math.random() < findChance && session.progress > 10) {
     session.foundPassword = hash.password;
     session.status = 'completed';
-    session.addLog(`Password found: ${hash.password}`, 'success');
+    session.addLog({
+      key: 'activity.log.passwordFound',
+      params: { password: hash.password },
+      type: 'success'
+    });
     clearInterval(session.intervalId);
     if (onUpdate) onUpdate({ ...session, found: true });
     return;
@@ -205,9 +228,9 @@ function dictionaryTick(hash, wordlistSize, onUpdate) {
   // Check if exhausted
   if (session.candidatesTested >= session.candidatesTotal) {
     session.status = 'exhausted';
-    session.addLog('Wordlist exhausted, password not found', 'warning');
+    session.addLog({ key: 'activity.log.wordlistExhausted', type: 'warning' });
     clearInterval(session.intervalId);
-    if (onUpdate) onUpdate({ ...session, exhausted: true });
+    if (onUpdate) onUpdate({ ...session, exhausted: true, failReason: 'errors.wordlistExhausted' });
     return;
   }
   
@@ -236,7 +259,11 @@ function bruteforceTick(hash, onUpdate) {
   if (Math.random() < findChance && session.progress > 5) {
     session.foundPassword = hash.password;
     session.status = 'completed';
-    session.addLog(`Password found: ${hash.password}`, 'success');
+    session.addLog({
+      key: 'activity.log.passwordFound',
+      params: { password: hash.password },
+      type: 'success'
+    });
     clearInterval(session.intervalId);
     if (onUpdate) onUpdate({ ...session, found: true });
     return;
@@ -244,9 +271,9 @@ function bruteforceTick(hash, onUpdate) {
   
   if (session.candidatesTested >= session.candidatesTotal) {
     session.status = 'exhausted';
-    session.addLog('Keyspace exhausted, password not found', 'warning');
+    session.addLog({ key: 'activity.log.keyspaceExhausted', type: 'warning' });
     clearInterval(session.intervalId);
-    if (onUpdate) onUpdate({ ...session, exhausted: true });
+    if (onUpdate) onUpdate({ ...session, exhausted: true, failReason: 'errors.keyspaceExhausted' });
     return;
   }
   
@@ -257,23 +284,27 @@ function bruteforceTick(hash, onUpdate) {
 export function startDictionaryAttack(hash, wordlistKey, onUpdate) {
   session.reset();
   
-  const wordlist = WORDLISTS[wordlistKey] || WORDLISTS.common;
+  const selectedWordlistKey = WORDLISTS[wordlistKey] ? wordlistKey : 'rockyou_sample';
+  const wordlist = WORDLISTS[selectedWordlistKey];
   
   session.status = 'running';
   session.hashId = hash.id;
   session.targetHash = hash;
   session.attackMode = 'dictionary';
-  session.wordlist = wordlist.name;
+  session.wordlist = selectedWordlistKey;
   session.candidatesTotal = wordlist.size;
   session.startTime = Date.now();
   
-  session.addLog(`Starting dictionary attack on ${hash.ssid}`);
-  session.addLog(`Wordlist: ${wordlist.name} (${wordlist.size} words)`);
-  session.addLog(`Hash type: ${hash.type}`);
+  session.addLog({ key: 'activity.log.startDictionary', params: { ssid: hash.ssid } });
+  session.addLog({
+    key: 'activity.log.wordlistSelected',
+    params: { wordlistKey: selectedWordlistKey, size: formatNumber(wordlist.size) }
+  });
+  session.addLog({ key: 'activity.log.hashType', params: { type: hash.type } });
   
   session.intervalId = setInterval(() => {
     if (session.status === 'running') {
-      dictionaryTick(hash, wordlist.size, onUpdate);
+      dictionaryTick(hash, onUpdate);
     }
   }, 100);
   
@@ -294,10 +325,10 @@ export function startBruteforceAttack(hash, mask, onUpdate) {
   session.candidatesTotal = Math.min(keyspace, 10000000); // Cap for simulation
   session.startTime = Date.now();
   
-  session.addLog(`Starting brute-force attack on ${hash.ssid}`);
-  session.addLog(`Mask: ${mask}`);
-  session.addLog(`Keyspace: ${formatNumber(keyspace)}`);
-  session.addLog(`Hash type: ${hash.type}`);
+  session.addLog({ key: 'activity.log.startBruteforce', params: { ssid: hash.ssid } });
+  session.addLog({ key: 'activity.log.maskSelected', params: { mask } });
+  session.addLog({ key: 'activity.log.keyspaceValue', params: { keyspace: formatNumber(keyspace) } });
+  session.addLog({ key: 'activity.log.hashType', params: { type: hash.type } });
   
   session.intervalId = setInterval(() => {
     if (session.status === 'running') {
@@ -312,7 +343,8 @@ export function startBruteforceAttack(hash, mask, onUpdate) {
 export function startHybridAttack(hash, wordlistKey, suffixMask, onUpdate) {
   session.reset();
   
-  const wordlist = WORDLISTS[wordlistKey] || WORDLISTS.common;
+  const selectedWordlistKey = WORDLISTS[wordlistKey] ? wordlistKey : 'rockyou_sample';
+  const wordlist = WORDLISTS[selectedWordlistKey];
   const maskKeyspace = calculateKeyspace(suffixMask);
   const totalKeyspace = wordlist.size * maskKeyspace;
   
@@ -320,14 +352,23 @@ export function startHybridAttack(hash, wordlistKey, suffixMask, onUpdate) {
   session.hashId = hash.id;
   session.targetHash = hash;
   session.attackMode = 'hybrid';
-  session.wordlist = wordlist.name;
+  session.wordlist = selectedWordlistKey;
   session.mask = suffixMask;
   session.candidatesTotal = Math.min(totalKeyspace, 10000000);
   session.startTime = Date.now();
   
-  session.addLog(`Starting hybrid attack on ${hash.ssid}`);
-  session.addLog(`Wordlist: ${wordlist.name} + Mask: ${suffixMask}`);
-  session.addLog(`Total keyspace: ${formatNumber(totalKeyspace)}`);
+  session.addLog({ key: 'activity.log.startHybrid', params: { ssid: hash.ssid } });
+  session.addLog({
+    key: 'activity.log.hybridConfig',
+    params: {
+      wordlistKey: selectedWordlistKey,
+      mask: suffixMask
+    }
+  });
+  session.addLog({
+    key: 'activity.log.totalKeyspace',
+    params: { keyspace: formatNumber(totalKeyspace) }
+  });
   
   session.intervalId = setInterval(() => {
     if (session.status === 'running') {
@@ -343,7 +384,11 @@ export function startHybridAttack(hash, wordlistKey, suffixMask, onUpdate) {
       if (Math.random() < findChance && session.progress > 3) {
         session.foundPassword = hash.password;
         session.status = 'completed';
-        session.addLog(`Password found: ${hash.password}`, 'success');
+        session.addLog({
+          key: 'activity.log.passwordFound',
+          params: { password: hash.password },
+          type: 'success'
+        });
         clearInterval(session.intervalId);
         if (onUpdate) onUpdate({ ...session, found: true });
         return;
@@ -351,9 +396,9 @@ export function startHybridAttack(hash, wordlistKey, suffixMask, onUpdate) {
       
       if (session.candidatesTested >= session.candidatesTotal) {
         session.status = 'exhausted';
-        session.addLog('Keyspace exhausted', 'warning');
+        session.addLog({ key: 'activity.log.keyspaceExhausted', type: 'warning' });
         clearInterval(session.intervalId);
-        if (onUpdate) onUpdate({ ...session, exhausted: true });
+        if (onUpdate) onUpdate({ ...session, exhausted: true, failReason: 'errors.keyspaceExhausted' });
         return;
       }
       
@@ -369,7 +414,7 @@ export function pauseAttack() {
   if (session.status === 'running') {
     session.status = 'paused';
     session.pauseTime = Date.now();
-    session.addLog('Attack paused');
+    session.addLog({ key: 'activity.log.attackPaused' });
   }
   return session;
 }
@@ -379,7 +424,7 @@ export function resumeAttack() {
   if (session.status === 'paused') {
     session.totalPauseTime += Date.now() - session.pauseTime;
     session.status = 'running';
-    session.addLog('Attack resumed');
+    session.addLog({ key: 'activity.log.attackResumed' });
   }
   return session;
 }
@@ -390,7 +435,7 @@ export function stopAttack() {
     clearInterval(session.intervalId);
   }
   session.status = 'stopped';
-  session.addLog('Attack stopped by user', 'warning');
+  session.addLog({ key: 'activity.log.attackStopped', type: 'warning' });
   return session;
 }
 

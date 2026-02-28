@@ -18,7 +18,7 @@ function StatsCards() {
       value: stats.total,
       icon: Database,
       color: 'cyan',
-      subtext: `${stats.byType.PMKID} PMKID / ${stats.byType.EAPOL} EAPOL`
+      subtext: t('stats.typeSplit', { pmkid: stats.byType.PMKID, eapol: stats.byType.EAPOL })
     },
     {
       id: 'cracked',
@@ -39,7 +39,7 @@ function StatsCards() {
     {
       id: 'speed',
       label: t('stats.currentSpeed'),
-      value: session?.status === 'running' ? formatSpeed(session.speed) : '0 H/s',
+      value: session?.status === 'running' ? formatSpeed(session.speed) : t('stats.zeroSpeed'),
       icon: Zap,
       color: 'purple',
       subtext: session?.status === 'running' ? t('stats.attackInProgress') : t('stats.idle'),

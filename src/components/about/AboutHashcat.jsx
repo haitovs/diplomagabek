@@ -1,56 +1,59 @@
 import { motion } from 'framer-motion';
 import {
-    AlertTriangle,
-    Book,
-    Combine,
-    ExternalLink, Github,
-    Hash,
-    Shield,
-    Wifi,
-    Zap
+  AlertTriangle,
+  Book,
+  Combine,
+  ExternalLink,
+  Github,
+  Hash,
+  Shield,
+  Wifi,
+  Zap
 } from 'lucide-react';
+import { useI18n } from '../../context/I18nContext';
 import './AboutHashcat.css';
 
 function AboutHashcat() {
+  const { t } = useI18n();
+
   const hashModes = [
-    { mode: '22000', name: 'WPA-PBKDF2-PMKID+EAPOL', desc: 'Modern WPA/WPA2 format (recommended)' },
-    { mode: '2500', name: 'WPA-EAPOL-PBKDF2', desc: 'Legacy WPA/WPA2 handshake' },
-    { mode: '16800', name: 'WPA-PMKID-PBKDF2', desc: 'PMKID-only attack' }
+    { mode: '22000', name: 'WPA-PBKDF2-PMKID+EAPOL', descKey: 'about.hashModes.mode22000' },
+    { mode: '2500', name: 'WPA-EAPOL-PBKDF2', descKey: 'about.hashModes.mode2500' },
+    { mode: '16800', name: 'WPA-PMKID-PBKDF2', descKey: 'about.hashModes.mode16800' }
   ];
-  
+
   const attackModes = [
-    { 
-      mode: '-a 0', 
-      name: 'Dictionary Attack', 
+    {
+      mode: '-a 0',
+      name: t('attack.modes.dictionary.name'),
       icon: Book,
-      desc: 'Tests passwords from a wordlist file. Most effective when using comprehensive wordlists like RockYou.'
+      descKey: 'about.attackModes.dictionary'
     },
-    { 
-      mode: '-a 3', 
-      name: 'Brute-force Attack', 
+    {
+      mode: '-a 3',
+      name: t('attack.modes.bruteforce.name'),
       icon: Hash,
-      desc: 'Tries all possible character combinations based on a mask pattern. Effective for short or predictable passwords.'
+      descKey: 'about.attackModes.bruteforce'
     },
-    { 
-      mode: '-a 6', 
-      name: 'Hybrid Attack', 
+    {
+      mode: '-a 6',
+      name: t('attack.modes.hybrid.name'),
       icon: Combine,
-      desc: 'Combines wordlist with mask. Example: word + ?d?d?d appends 3 digits to each dictionary word.'
+      descKey: 'about.attackModes.hybrid'
     }
   ];
-  
+
   const maskChars = [
-    { char: '?l', desc: 'Lowercase letters (a-z)', count: 26 },
-    { char: '?u', desc: 'Uppercase letters (A-Z)', count: 26 },
-    { char: '?d', desc: 'Digits (0-9)', count: 10 },
-    { char: '?s', desc: 'Special characters (!@#$...)', count: 32 },
-    { char: '?a', desc: 'All printable ASCII', count: 95 }
+    { char: '?l', descKey: 'about.maskChars.lowercase', count: 26 },
+    { char: '?u', descKey: 'about.maskChars.uppercase', count: 26 },
+    { char: '?d', descKey: 'about.maskChars.digits', count: 10 },
+    { char: '?s', descKey: 'about.maskChars.special', count: 32 },
+    { char: '?a', descKey: 'about.maskChars.all', count: 95 }
   ];
-  
+
   return (
     <div className="about-hashcat">
-      {/* Header */}
-      <motion.div 
+      <motion.div
         className="about-header glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -60,13 +63,12 @@ function AboutHashcat() {
           <Shield size={28} className="shield-icon" />
         </div>
         <div className="about-title">
-          <h1>About Hashcat & WiFi Cracking</h1>
-          <p>Understanding WPA/WPA2 password recovery techniques</p>
+          <h1>{t('about.headerTitle')}</h1>
+          <p>{t('about.headerSubtitle')}</p>
         </div>
       </motion.div>
-      
-      {/* Disclaimer */}
-      <motion.div 
+
+      <motion.div
         className="disclaimer glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -74,77 +76,65 @@ function AboutHashcat() {
       >
         <AlertTriangle size={24} />
         <div>
-          <h3>Educational Purpose Only</h3>
-          <p>
-            This application is a <strong>simulation</strong> for educational purposes. 
-            It does not interact with real WiFi networks or the actual hashcat tool. 
-            Always obtain proper authorization before testing security on any network.
-          </p>
+          <h3>{t('about.educationalOnlyTitle')}</h3>
+          <p>{t('about.educationalOnlyBody')}</p>
         </div>
       </motion.div>
-      
-      {/* What is Hashcat */}
-      <motion.div 
+
+      <motion.div
         className="section glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h2>What is Hashcat?</h2>
-        <p>
-          Hashcat is the world's fastest and most advanced password recovery utility. 
-          It supports five unique modes of attack for over 300 highly-optimized hashing algorithms. 
-          Hashcat is particularly powerful for cracking WiFi WPA/WPA2 passwords when combined 
-          with captured handshakes or PMKIDs.
-        </p>
+        <h2>{t('about.whatIsHashcatTitle')}</h2>
+        <p>{t('about.whatIsHashcatBody')}</p>
         <div className="features-grid">
           <div className="feature">
             <Zap size={20} />
-            <span>GPU Accelerated</span>
+            <span>{t('about.features.gpu')}</span>
           </div>
           <div className="feature">
             <Shield size={20} />
-            <span>300+ Hash Types</span>
+            <span>{t('about.features.hashTypes')}</span>
           </div>
           <div className="feature">
             <Hash size={20} />
-            <span>Multiple Attack Modes</span>
+            <span>{t('about.features.attackModes')}</span>
           </div>
         </div>
       </motion.div>
-      
-      {/* Hash Modes */}
-      <motion.div 
+
+      <motion.div
         className="section glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2>WiFi Hash Modes</h2>
-        <p>Hashcat uses specific mode numbers (-m flag) for different hash types:</p>
+        <h2>{t('about.wifiHashModesTitle')}</h2>
+        <p>{t('about.wifiHashModesBody')}</p>
         <div className="hash-modes">
-          {hashModes.map(mode => (
+          {hashModes.map((mode) => (
             <div key={mode.mode} className="hash-mode-item">
               <span className="mode-number font-mono">-m {mode.mode}</span>
               <div className="mode-details">
                 <strong>{mode.name}</strong>
-                <p>{mode.desc}</p>
+                <p>{t(mode.descKey)}</p>
               </div>
             </div>
           ))}
         </div>
       </motion.div>
-      
-      {/* Attack Modes */}
-      <motion.div 
+
+      <motion.div
         className="section glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <h2>Attack Modes</h2>
+        <h2>{t('about.attackModesTitle')}</h2>
         <div className="attack-modes">
-          {attackModes.map(attack => {
+          {attackModes.map((attack) => {
             const Icon = attack.icon;
             return (
               <div key={attack.mode} className="attack-mode-item">
@@ -156,97 +146,94 @@ function AboutHashcat() {
                     <strong>{attack.name}</strong>
                     <span className="attack-flag font-mono">{attack.mode}</span>
                   </div>
-                  <p>{attack.desc}</p>
+                  <p>{t(attack.descKey)}</p>
                 </div>
               </div>
             );
           })}
         </div>
       </motion.div>
-      
-      {/* Mask Characters */}
-      <motion.div 
+
+      <motion.div
         className="section glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <h2>Mask Characters</h2>
-        <p>Masks define character sets for brute-force attacks:</p>
+        <h2>{t('about.maskCharactersTitle')}</h2>
+        <p>{t('about.maskCharactersBody')}</p>
         <div className="mask-table">
           <table>
             <thead>
               <tr>
-                <th>Mask</th>
-                <th>Character Set</th>
-                <th>Count</th>
+                <th>{t('about.maskColumn')}</th>
+                <th>{t('about.characterSetColumn')}</th>
+                <th>{t('about.countColumn')}</th>
               </tr>
             </thead>
             <tbody>
-              {maskChars.map(m => (
-                <tr key={m.char}>
-                  <td className="font-mono mask-char">{m.char}</td>
-                  <td>{m.desc}</td>
-                  <td className="font-mono">{m.count}</td>
+              {maskChars.map((mask) => (
+                <tr key={mask.char}>
+                  <td className="font-mono mask-char">{mask.char}</td>
+                  <td>{t(mask.descKey)}</td>
+                  <td className="font-mono">{mask.count}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <div className="mask-example">
-          <h4>Example Masks</h4>
+          <h4>{t('about.exampleMasksTitle')}</h4>
           <ul>
-            <li><code>?d?d?d?d?d?d?d?d</code> - 8 digit PIN (100,000,000 combinations)</li>
-            <li><code>?u?l?l?l?l?l?d?d</code> - Common pattern like "Welcome23"</li>
-            <li><code>?a?a?a?a?a?a?a?a</code> - 8 character all ASCII (6.6 quadrillion)</li>
+            <li>{t('about.exampleMasks.one')}</li>
+            <li>{t('about.exampleMasks.two')}</li>
+            <li>{t('about.exampleMasks.three')}</li>
           </ul>
         </div>
       </motion.div>
-      
-      {/* hc22000 Format */}
-      <motion.div 
+
+      <motion.div
         className="section glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
-        <h2>hc22000 Hash Format</h2>
-        <p>Modern hashcat uses the hc22000 format for WPA/WPA2 hashes:</p>
+        <h2>{t('about.hc22000Title')}</h2>
+        <p>{t('about.hc22000Body')}</p>
         <div className="code-block">
           <code>WPA*TYPE*PMKID_OR_MIC*MAC_AP*MAC_CLIENT*ESSID_HEX*NONCE*EAPOL*MESSAGEPAIR</code>
         </div>
         <div className="format-examples">
           <div className="format-example">
-            <h4>PMKID Hash (WPA*01)</h4>
+            <h4>{t('about.hc22000Pmkid')}</h4>
             <code className="hash-example">WPA*01*4d4fe7aac3a2cecab195321ceb99a7d0*fc690c158264*f4747f87f9f4*486f6d655f4e6574***</code>
           </div>
           <div className="format-example">
-            <h4>EAPOL Hash (WPA*02)</h4>
+            <h4>{t('about.hc22000Eapol')}</h4>
             <code className="hash-example">WPA*02*[MIC]*[MAC_AP]*[MAC_CLIENT]*[ESSID_HEX]*[NONCE_AP]*[EAPOL]*[MSGPAIR]</code>
           </div>
         </div>
       </motion.div>
-      
-      {/* Resources */}
-      <motion.div 
+
+      <motion.div
         className="section glass-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
       >
-        <h2>External Resources</h2>
+        <h2>{t('about.resourcesTitle')}</h2>
         <div className="resources">
           <a href="https://hashcat.net" target="_blank" rel="noopener noreferrer" className="resource-link">
             <ExternalLink size={16} />
-            hashcat.net - Official Website
+            {t('about.resources.website')}
           </a>
           <a href="https://github.com/hashcat/hashcat" target="_blank" rel="noopener noreferrer" className="resource-link">
             <Github size={16} />
-            Hashcat on GitHub
+            {t('about.resources.github')}
           </a>
           <a href="https://hashcat.net/wiki/" target="_blank" rel="noopener noreferrer" className="resource-link">
             <Book size={16} />
-            Hashcat Wiki & Documentation
+            {t('about.resources.wiki')}
           </a>
         </div>
       </motion.div>

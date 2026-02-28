@@ -28,6 +28,18 @@ function SecurityTools() {
   const [maskParams, setMaskParams] = useState({ lowercase: 4, uppercase: 1, digits: 2, symbols: 1 });
   const [maskResult, setMaskResult] = useState(buildMaskLocal(maskParams));
 
+  const resolveLevelLabel = (level) => {
+    const levelKey = `tools.levelValues.${level}`;
+    const translated = t(levelKey);
+    return translated === levelKey ? level : translated;
+  };
+
+  const resolveFeedbackLine = (line) => {
+    if (!line) return '';
+    const translated = t(line);
+    return translated === line ? line : translated;
+  };
+
   const handleHashDetect = async () => {
     if (!hashInput.trim()) return;
 
@@ -74,8 +86,6 @@ function SecurityTools() {
 
   return (
     <div className="security-tools-page">
-      <h2>{t('tools.title')}</h2>
-
       <div className="security-tools-grid">
         <motion.section
           className="glass-card security-tool-card"
@@ -101,9 +111,9 @@ function SecurityTools() {
 
           {hashResult && (
             <div className="tool-result">
-              <div><strong>Name:</strong> {hashResult.name}</div>
-              <div><strong>Mode:</strong> {hashResult.mode ?? 'N/A'}</div>
-              <div><strong>Confidence:</strong> {(Number(hashResult.confidence || 0) * 100).toFixed(0)}%</div>
+              <div><strong>{t('tools.resultName')}:</strong> {(hashResult.name === 'Unknown' ? t('tools.unknown') : hashResult.name) || t('tools.unknown')}</div>
+              <div><strong>{t('tools.resultMode')}:</strong> {hashResult.mode ?? t('tools.notAvailable')}</div>
+              <div><strong>{t('tools.resultConfidence')}:</strong> {(Number(hashResult.confidence || 0) * 100).toFixed(0)}%</div>
             </div>
           )}
         </motion.section>
@@ -133,11 +143,11 @@ function SecurityTools() {
           {passwordResult && (
             <div className="tool-result">
               <div><strong>{t('tools.score')}:</strong> {passwordResult.score} / 5</div>
-              <div><strong>Level:</strong> {passwordResult.level}</div>
+              <div><strong>{t('tools.level')}:</strong> {resolveLevelLabel(passwordResult.level)}</div>
               {(passwordResult.feedback || []).length > 0 && (
                 <div className="tool-feedback">
                   {(passwordResult.feedback || []).map((line) => (
-                    <p key={line}>{line}</p>
+                    <p key={line}>{resolveFeedbackLine(line)}</p>
                   ))}
                 </div>
               )}
@@ -211,8 +221,8 @@ function SecurityTools() {
           </button>
 
           <div className="tool-result">
-            <div><strong>{t('tools.generatedMask')}:</strong> <code>{maskResult?.mask || '(empty)'}</code></div>
-            <div><strong>Length:</strong> {maskResult?.length || 0}</div>
+            <div><strong>{t('tools.generatedMask')}:</strong> <code>{maskResult?.mask || t('tools.emptyMask')}</code></div>
+            <div><strong>{t('tools.length')}:</strong> {maskResult?.length || 0}</div>
           </div>
         </motion.section>
       </div>

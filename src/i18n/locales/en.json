@@ -6,7 +6,11 @@
   },
   "header": {
     "educational": "Educational",
-    "language": "Language"
+    "language": "Language",
+    "languages": {
+      "en": "English",
+      "tk": "Turkmen"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -35,7 +39,9 @@
     "successRate": "{{value}}% success rate",
     "currentlyCracking": "{{value}} currently cracking",
     "idle": "Idle",
-    "attackInProgress": "Attack in progress"
+    "attackInProgress": "Attack in progress",
+    "typeSplit": "{{pmkid}} PMKID / {{eapol}} EAPOL",
+    "zeroSpeed": "0 H/s"
   },
   "table": {
     "search": "Search SSID, BSSID, ID...",
@@ -45,6 +51,7 @@
     "allComplexity": "All Complexity",
     "id": "ID",
     "ssid": "SSID",
+    "bssid": "BSSID",
     "type": "Type",
     "complexity": "Complexity",
     "status": "Status",
@@ -55,6 +62,7 @@
     "viewDetails": "View Details",
     "attack": "Attack",
     "noDetails": "No details",
+    "notApplicable": "-",
     "showing": "Showing {{shown}} of {{total}} hashes",
     "performanceNotice": "(Displaying first 50 for performance)",
     "hashDetails": "Hash Details",
@@ -81,6 +89,141 @@
     "successRate": "Success Rate",
     "live": "LIVE"
   },
+  "attack": {
+    "simulationBanner": {
+      "title": "Simulation Mode",
+      "message": "- WiFi scanning is unavailable on the server. Use \"Generate\" to create simulated networks for educational demonstration."
+    },
+    "realBanner": {
+      "title": "Real Hashcat Mode",
+      "message": "is enabled. Dictionary attacks run on backend hashcat. Brute-force and hybrid remain simulator mode unless backend support is added."
+    },
+    "targetHash": "Target Hash",
+    "scanRealNetworks": "Scan for real networks",
+    "generateSimulatedNetworks": "Generate simulated networks",
+    "scan": "Scan",
+    "generate": "Generate",
+    "scanning": "Scanning...",
+    "generating": "Generating...",
+    "real": "Real",
+    "realPrefix": "Real",
+    "noTargetSelected": "No target selected",
+    "selectTarget": "Select Target:",
+    "selectHashPlaceholder": "-- Select a hash --",
+    "attackMode": "Attack Mode",
+    "configuration": "Configuration",
+    "selectWordlist": "Select Wordlist",
+    "words": "words",
+    "serverWordlistPath": "Server preset path: {{path}}",
+    "mask": "Mask",
+    "maskLegend": {
+      "lowercase": "?l = a-z",
+      "uppercase": "?u = A-Z",
+      "digits": "?d = 0-9",
+      "special": "?s = special",
+      "all": "?a = all"
+    },
+    "keyspace": "Keyspace",
+    "estimatedTime": "Est. Time",
+    "appendMask": "Append Mask",
+    "hybridMaskDescription": "Appends mask to each word: word + {{mask}}",
+    "controls": "Controls",
+    "startAttack": "Start Attack",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop",
+    "status": "Status",
+    "mode": "Mode",
+    "speed": "Speed",
+    "progress": "Progress",
+    "passwordFound": "Password Found!",
+    "keyspaceExhausted": "Keyspace exhausted. Try a different attack.",
+    "modes": {
+      "dictionary": {
+        "name": "Dictionary Attack"
+      },
+      "bruteforce": {
+        "name": "Brute-force Attack"
+      },
+      "hybrid": {
+        "name": "Hybrid Attack"
+      }
+    },
+    "statusValues": {
+      "idle": "Idle",
+      "running": "Running",
+      "paused": "Paused",
+      "completed": "Completed",
+      "exhausted": "Exhausted",
+      "stopped": "Stopped",
+      "failed": "Failed"
+    },
+    "presets": {
+      "eightDigits": "8 Digits",
+      "eightLowercase": "8 Lowercase",
+      "commonPattern": "Common Pattern",
+      "wordPlusYear": "Word + Year",
+      "complexEight": "Complex 8"
+    }
+  },
+  "progress": {
+    "title": "Cracking Progress",
+    "running": "Running",
+    "paused": "Paused",
+    "progress": "Progress",
+    "speed": "Speed",
+    "eta": "ETA",
+    "tested": "Tested",
+    "currentCandidate": "Current:",
+    "collectingData": "Collecting data...",
+    "startToSee": "Start an attack to see progress",
+    "tooltipSpeed": "Speed",
+    "tooltipTested": "Tested"
+  },
+  "activity": {
+    "title": "Activity Log",
+    "entries": "{{count}} entries",
+    "empty": "No activity yet. Start an attack to see logs.",
+    "unknownEntry": "Unknown log entry",
+    "log": {
+      "passwordFound": "Password found: {{password}}",
+      "wordlistExhausted": "Wordlist exhausted, password not found",
+      "keyspaceExhausted": "Keyspace exhausted, password not found",
+      "startDictionary": "Starting dictionary attack on {{ssid}}",
+      "wordlistSelected": "Wordlist: {{wordlist}} ({{size}} words)",
+      "hashType": "Hash type: {{type}}",
+      "startBruteforce": "Starting brute-force attack on {{ssid}}",
+      "maskSelected": "Mask: {{mask}}",
+      "keyspaceValue": "Keyspace: {{keyspace}}",
+      "startHybrid": "Starting hybrid attack on {{ssid}}",
+      "hybridConfig": "Wordlist: {{wordlist}} + Mask: {{mask}}",
+      "totalKeyspace": "Total keyspace: {{keyspace}}",
+      "attackPaused": "Attack paused",
+      "attackResumed": "Attack resumed",
+      "attackStopped": "Attack stopped by user"
+    }
+  },
+  "results": {
+    "title": "Cracked Passwords",
+    "passwordsRecovered": "{{count}} passwords recovered",
+    "copyPassword": "Copy password",
+    "export": "Export",
+    "emptyTitle": "No Cracked Passwords Yet",
+    "emptyDescription": "Start an attack on pending hashes to recover passwords.",
+    "notAvailable": "N/A",
+    "unknown": "Unknown",
+    "exportFormatsTitle": "Export Formats",
+    "formats": {
+      "csv": "CSV",
+      "json": "JSON",
+      "potfile": "Potfile"
+    },
+    "formatDescriptions": {
+      "csv": "Comma-separated, compatible with Excel",
+      "json": "Structured data for programmatic use",
+      "potfile": "Hashcat-compatible hash:password format"
+    }
+  },
   "tools": {
     "title": "Security Instruments",
     "hashIdentifier": "Hash Type Identifier",
@@ -96,6 +239,112 @@
     "symbols": "Symbols",
     "buildMask": "Build Mask",
     "generatedMask": "Generated Mask",
-    "score": "Score"
+    "score": "Score",
+    "level": "Level",
+    "length": "Length",
+    "resultName": "Name",
+    "resultMode": "Mode",
+    "resultConfidence": "Confidence",
+    "notAvailable": "N/A",
+    "unknown": "Unknown",
+    "emptyMask": "(empty)",
+    "levelValues": {
+      "very-weak": "Very weak",
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "very-strong": "Very strong"
+    },
+    "feedback": {
+      "passwordEmpty": "Password is empty.",
+      "minEightChars": "Use at least 8 characters.",
+      "minTwelveChars": "Use 12+ characters for better security.",
+      "mixCase": "Mix uppercase and lowercase letters.",
+      "addNumbers": "Add numbers.",
+      "addSymbols": "Add special symbols.",
+      "avoidCommonPatterns": "Avoid common patterns."
+    }
+  },
+  "wordlists": {
+    "rockyouSample": {
+      "name": "RockYou Sample",
+      "description": "Small local sample for fast simulation and testing."
+    },
+    "rockyou": {
+      "name": "rockyou.txt",
+      "description": "Classic large dictionary from known password leaks."
+    },
+    "top100k": {
+      "name": "Top 100K Common",
+      "description": "High-frequency passwords with a quick runtime profile."
+    },
+    "probableV2": {
+      "name": "Probable-v2 Top1575",
+      "description": "Probabilistic candidate set optimized for real cracking."
+    },
+    "wifiDefaults": {
+      "name": "WiFi Default Passwords",
+      "description": "Default router credential patterns and vendor defaults."
+    }
+  },
+  "about": {
+    "headerTitle": "About Hashcat & WiFi Cracking",
+    "headerSubtitle": "Understanding WPA/WPA2 password recovery techniques",
+    "educationalOnlyTitle": "Educational Purpose Only",
+    "educationalOnlyBody": "This application is a simulation for educational purposes. It does not interact with real WiFi networks or the actual hashcat tool. Always obtain proper authorization before testing security on any network.",
+    "whatIsHashcatTitle": "What is Hashcat?",
+    "whatIsHashcatBody": "Hashcat is one of the fastest and most advanced password recovery utilities. It supports multiple attack strategies and highly optimized hashing algorithms. For WiFi testing, hashcat is commonly used with captured WPA/WPA2 handshakes or PMKIDs.",
+    "features": {
+      "gpu": "GPU Accelerated",
+      "hashTypes": "300+ Hash Types",
+      "attackModes": "Multiple Attack Modes"
+    },
+    "wifiHashModesTitle": "WiFi Hash Modes",
+    "wifiHashModesBody": "Hashcat uses specific mode numbers (-m flag) for different hash types:",
+    "hashModes": {
+      "mode22000": "Modern WPA/WPA2 format (recommended)",
+      "mode2500": "Legacy WPA/WPA2 handshake",
+      "mode16800": "PMKID-only attack"
+    },
+    "attackModesTitle": "Attack Modes",
+    "attackModes": {
+      "dictionary": "Tests passwords from a wordlist file. Most effective when using comprehensive dictionaries.",
+      "bruteforce": "Tries all possible character combinations based on a mask pattern. Effective for short or predictable passwords.",
+      "hybrid": "Combines wordlist with mask. Example: word + ?d?d?d appends 3 digits to each dictionary word."
+    },
+    "maskCharactersTitle": "Mask Characters",
+    "maskCharactersBody": "Masks define character sets for brute-force attacks:",
+    "maskColumn": "Mask",
+    "characterSetColumn": "Character Set",
+    "countColumn": "Count",
+    "maskChars": {
+      "lowercase": "Lowercase letters (a-z)",
+      "uppercase": "Uppercase letters (A-Z)",
+      "digits": "Digits (0-9)",
+      "special": "Special characters (!@#$...)",
+      "all": "All printable ASCII"
+    },
+    "exampleMasksTitle": "Example Masks",
+    "exampleMasks": {
+      "one": "?d?d?d?d?d?d?d?d - 8 digit PIN (100,000,000 combinations)",
+      "two": "?u?l?l?l?l?l?d?d - Common pattern like Welcome23",
+      "three": "?a?a?a?a?a?a?a?a - 8 character all ASCII (6.6 quadrillion)"
+    },
+    "hc22000Title": "hc22000 Hash Format",
+    "hc22000Body": "Modern hashcat uses the hc22000 format for WPA/WPA2 hashes:",
+    "hc22000Pmkid": "PMKID Hash (WPA*01)",
+    "hc22000Eapol": "EAPOL Hash (WPA*02)",
+    "resourcesTitle": "External Resources",
+    "resources": {
+      "website": "hashcat.net - Official Website",
+      "github": "Hashcat on GitHub",
+      "wiki": "Hashcat Wiki & Documentation"
+    }
+  },
+  "errors": {
+    "wordlistExhausted": "Wordlist exhausted, password not found",
+    "keyspaceExhausted": "Keyspace exhausted, password not found",
+    "keyspaceWordlistExhausted": "Keyspace/wordlist exhausted",
+    "stoppedByUser": "Stopped by user"
   }
 }

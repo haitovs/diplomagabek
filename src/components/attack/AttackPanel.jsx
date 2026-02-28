@@ -14,8 +14,9 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
+import { useI18n } from '../../context/I18nContext';
 import { importRealNetworks } from '../../services/database/hashDB';
 import { generateMockHash } from '../../services/database/mockGenerator';
 import {
@@ -43,28 +44,29 @@ function AttackPanel() {
     resume,
     stop
   } = useCracking();
+  const { t } = useI18n();
 
   const [attackMode, setAttackMode] = useState('dictionary');
   const [wordlist, setWordlist] = useState('rockyou_sample');
-  const [serverWordlistPath, setServerWordlistPath] = useState('');
   const [mask, setMask] = useState('?d?d?d?d?d?d?d?d');
   const [hybridMask, setHybridMask] = useState('?d?d?d');
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const isElectron = !!window.electronAPI;
 
-  // Set target hash from selection
   useEffect(() => {
     if (selectedHashes.length > 0) {
       setTargetHash(selectedHashes[0]);
     }
   }, [selectedHashes]);
 
-  // Available pending hashes
-  const pendingHashes = database?.hashes?.filter(h => h.status === 'pending') || [];
+  const pendingHashes = useMemo(
+    () => database?.hashes?.filter((hash) => hash.status === 'pending') || [],
+    [database]
+  );
 
   const handleSelectTarget = (hashId) => {
-    const hash = database?.hashes?.find(h => h.id === hashId);
+    const hash = database?.hashes?.find((item) => item.id === hashId);
     if (hash) {
       setTargetHash(hash);
       setSelectedHashes([hash]);
@@ -75,9 +77,9 @@ function AttackPanel() {
     if (!targetHash) return;
 
     const options = {
-      wordlist: wordlist,
-      mask: attackMode === 'bruteforce' ? mask : hybridMask,
-      wordlistPath: serverWordlistPath.trim() || undefined
+      wordlist,
+      wordlistKey: wordlist,
+      mask: attackMode === 'bruteforce' ? mask : hybridMask
     };
 
     startAttack(targetHash, attackMode, options);
@@ -92,7 +94,7 @@ function AttackPanel() {
           importRealNetworks(database, result.networks);
           refreshDatabase();
           if (!targetHash && result.networks.length > 0) {
-            const firstReal = database.hashes.find(h => h.ssid === result.networks[0].ssid);
+            const firstReal = database.hashes.find((hash) => hash.ssid === result.networks[0].ssid);
             if (firstReal) {
               setTargetHash(firstReal);
               setSelectedHashes([firstReal]);
@@ -100,86 +102,114 @@ function AttackPanel() {
           }
         }
       } catch (error) {
-        console.error("Scan failed:", error);
+        console.error('Scan failed:', error);
       } finally {
         setIsScanning(false);
       }
-    } else {
-      // Web / server mode — generate simulated networks
-      setIsScanning(true);
-      setTimeout(() => {
-        const mockNets = [];
-        for (let i = 0; i < 5; i++) {
-          const m = generateMockHash(Date.now() + i);
-          mockNets.push({
-            ssid: m.ssid,
-            bssid: m.bssid,
-            rssi: String(-1 * (40 + Math.floor(Math.random() * 50))),
-            channel: String(Math.floor(Math.random() * 11) + 1),
-            security: m.type === 'PMKID' ? 'WPA2' : 'WPA',
-            type: 'Simulated',
-          });
-        }
-        importRealNetworks(database, mockNets);
-        refreshDatabase();
-        if (!targetHash && database.hashes.length > 0) {
-          const newest = database.hashes[database.hashes.length - 1];
-          setTargetHash(newest);
-          setSelectedHashes([newest]);
-        }
-        setIsScanning(false);
-      }, 1500);
+      return;
     }
+
+    setIsScanning(true);
+    setTimeout(() => {
+      const mockNets = [];
+      for (let i = 0; i < 5; i += 1) {
+        const mock = generateMockHash(Date.now() + i);
+        mockNets.push({
+          ssid: mock.ssid,
+          bssid: mock.bssid,
+          rssi: String(-1 * (40 + Math.floor(Math.random() * 50))),
+          channel: String(Math.floor(Math.random() * 11) + 1),
+          security: mock.type === 'PMKID' ? 'WPA2' : 'WPA',
+          type: 'Simulated'
+        });
+      }
+
+      importRealNetworks(database, mockNets);
+      refreshDatabase();
+      if (!targetHash && database.hashes.length > 0) {
+        const newest = database.hashes[database.hashes.length - 1];
+        setTargetHash(newest);
+        setSelectedHashes([newest]);
+      }
+      setIsScanning(false);
+    }, 1500);
   };
 
   const currentKeyspace = calculateKeyspace(attackMode === 'bruteforce' ? mask : hybridMask);
-  const estimatedSpeed = 2000; // Approximate H/s
+  const estimatedSpeed = 2000;
   const estimatedTime = estimateTime(currentKeyspace, estimatedSpeed);
 
-  const attackModes = [
+  const attackModes = useMemo(() => ([
     {
       id: 'dictionary',
-      name: 'Dictionary Attack',
+      name: t('attack.modes.dictionary.name'),
       icon: Book,
-      flag: '-a 0',
-      description: 'Try passwords from a wordlist'
+      flag: '-a 0'
     },
     {
       id: 'bruteforce',
-      name: 'Brute-force Attack',
+      name: t('attack.modes.bruteforce.name'),
       icon: Hash,
-      flag: '-a 3',
-      description: 'Try all character combinations'
+      flag: '-a 3'
     },
     {
       id: 'hybrid',
-      name: 'Hybrid Attack',
+      name: t('attack.modes.hybrid.name'),
       icon: Combine,
-      flag: '-a 6',
-      description: 'Wordlist + character mask'
+      flag: '-a 6'
     }
-  ];
+  ]), [t]);
+
+  const selectedWordlist = WORDLISTS[wordlist] || WORDLISTS.rockyou_sample;
+  const wordlistEntries = Object.entries(WORDLISTS);
+
+  const renderWordlistSelect = () => (
+    <>
+      <label>{t('attack.selectWordlist')}</label>
+      <select
+        className="select"
+        value={wordlist}
+        onChange={(event) => setWordlist(event.target.value)}
+        disabled={isActive}
+      >
+        {wordlistEntries.map(([key, wl]) => (
+          <option key={key} value={key}>
+            {t(wl.nameKey)} ({formatNumber(wl.size)} {t('attack.words')})
+          </option>
+        ))}
+      </select>
+      <p className="config-desc">{t(selectedWordlist.descriptionKey)}</p>
+      {isRealBackendEnabled && selectedWordlist?.serverPath && (
+        <p className="config-desc">
+          {t('attack.serverWordlistPath', { path: selectedWordlist.serverPath })}
+        </p>
+      )}
+    </>
+  );
 
   return (
     <div className="attack-panel">
-      {/* Server / Web mode info banner */}
       {!isElectron && (
         <motion.div
           className="glass-card"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '12px 16px', marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            marginBottom: '16px',
             background: 'rgba(59, 130, 246, 0.1)',
             border: '1px solid rgba(59, 130, 246, 0.3)',
-            borderRadius: '10px', fontSize: '13px', color: '#93c5fd',
+            borderRadius: '10px',
+            fontSize: '13px',
+            color: '#93c5fd'
           }}
         >
           <Info size={18} style={{ flexShrink: 0, color: '#60a5fa' }} />
           <span>
-            <strong>Simulation Mode</strong> — WiFi scanning is unavailable on the server.
-            Use <em>"Generate"</em> to create simulated networks for educational demonstration.
+            <strong>{t('attack.simulationBanner.title')}</strong> {t('attack.simulationBanner.message')}
           </span>
         </motion.div>
       )}
@@ -190,23 +220,26 @@ function AttackPanel() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '12px 16px', marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            marginBottom: '16px',
             background: 'rgba(34, 197, 94, 0.12)',
             border: '1px solid rgba(34, 197, 94, 0.3)',
-            borderRadius: '10px', fontSize: '13px', color: '#86efac',
+            borderRadius: '10px',
+            fontSize: '13px',
+            color: '#86efac'
           }}
         >
           <Info size={18} style={{ flexShrink: 0, color: '#4ade80' }} />
           <span>
-            <strong>Real Hashcat Mode</strong> is enabled. Dictionary attacks run on backend hashcat.
-            Brute-force and hybrid remain simulator mode unless backend support is added.
+            <strong>{t('attack.realBanner.title')}</strong> {t('attack.realBanner.message')}
           </span>
         </motion.div>
       )}
 
       <div className="attack-grid">
-        {/* Target Selection */}
         <motion.div
           className="panel-card glass-card"
           initial={{ opacity: 0, y: 20 }}
@@ -214,18 +247,18 @@ function AttackPanel() {
         >
           <div className="card-header">
             <Target size={20} />
-            <h3>Target Hash</h3>
+            <h3>{t('attack.targetHash')}</h3>
             <div style={{ marginLeft: 'auto' }}>
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={handleScanNetworks}
                 disabled={isScanning || isActive}
-                title={isElectron ? 'Scan for real networks' : 'Generate simulated networks'}
+                title={isElectron ? t('attack.scanRealNetworks') : t('attack.generateSimulatedNetworks')}
               >
                 <RefreshCw size={14} className={isScanning ? 'spin' : ''} />
                 {isScanning
-                  ? (isElectron ? ' Scanning...' : ' Generating...')
-                  : (isElectron ? ' Scan' : ' Generate')}
+                  ? (isElectron ? ` ${t('attack.scanning')}` : ` ${t('attack.generating')}`)
+                  : (isElectron ? ` ${t('attack.scan')}` : ` ${t('attack.generate')}`)}
               </button>
             </div>
           </div>
@@ -237,7 +270,9 @@ function AttackPanel() {
                 <div className="target-meta">
                   <span className="badge badge-info">{targetHash.type}</span>
                   <span className="text-muted font-mono text-sm">{targetHash.bssid}</span>
-                  {targetHash.category === 'real_scan' && <span className="badge badge-success">Real</span>}
+                  {targetHash.category === 'real_scan' && (
+                    <span className="badge badge-success">{t('attack.real')}</span>
+                  )}
                 </div>
                 <div className="target-hash font-mono text-xs">
                   {targetHash.hash.substring(0, 60)}...
@@ -246,22 +281,22 @@ function AttackPanel() {
             ) : (
               <div className="no-target">
                 <AlertCircle size={24} />
-                <p>No target selected</p>
+                <p>{t('attack.noTargetSelected')}</p>
               </div>
             )}
 
             <div className="target-selector">
-              <label>Select Target:</label>
+              <label>{t('attack.selectTarget')}</label>
               <select
                 className="select"
                 value={targetHash?.id || ''}
-                onChange={(e) => handleSelectTarget(e.target.value)}
+                onChange={(event) => handleSelectTarget(event.target.value)}
                 disabled={isActive}
               >
-                <option value="">-- Select a hash --</option>
-                {pendingHashes.map(h => (
-                  <option key={h.id} value={h.id}>
-                    {h.category === 'real_scan' ? '📡 ' : ''}{h.ssid} ({h.type})
+                <option value="">{t('attack.selectHashPlaceholder')}</option>
+                {pendingHashes.map((hash) => (
+                  <option key={hash.id} value={hash.id}>
+                    {hash.category === 'real_scan' ? `📡 ${t('attack.realPrefix')} ` : ''}{hash.ssid} ({hash.type})
                   </option>
                 ))}
               </select>
@@ -269,7 +304,6 @@ function AttackPanel() {
           </div>
         </motion.div>
 
-        {/* Attack Mode Selection */}
         <motion.div
           className="panel-card glass-card"
           initial={{ opacity: 0, y: 20 }}
@@ -278,12 +312,12 @@ function AttackPanel() {
         >
           <div className="card-header">
             <Zap size={20} />
-            <h3>Attack Mode</h3>
+            <h3>{t('attack.attackMode')}</h3>
           </div>
 
           <div className="card-content">
             <div className="mode-buttons">
-              {attackModes.map(mode => {
+              {attackModes.map((mode) => {
                 const Icon = mode.icon;
                 return (
                   <button
@@ -305,7 +339,6 @@ function AttackPanel() {
           </div>
         </motion.div>
 
-        {/* Attack Configuration */}
         <motion.div
           className="panel-card glass-card config-card"
           initial={{ opacity: 0, y: 20 }}
@@ -314,58 +347,28 @@ function AttackPanel() {
         >
           <div className="card-header">
             <Clock size={20} />
-            <h3>Configuration</h3>
+            <h3>{t('attack.configuration')}</h3>
           </div>
 
           <div className="card-content">
             {attackMode === 'dictionary' && (
               <div className="config-section">
-                <label>Wordlist</label>
-                <select
-                  className="select"
-                  value={wordlist}
-                  onChange={(e) => setWordlist(e.target.value)}
-                  disabled={isActive}
-                >
-                  {Object.entries(WORDLISTS).map(([key, wl]) => (
-                    <option key={key} value={key}>
-                      {wl.name} ({formatNumber(wl.size)} words)
-                    </option>
-                  ))}
-                </select>
-                <p className="config-desc">{WORDLISTS[wordlist]?.description}</p>
-
-                {isRealBackendEnabled && (
-                  <>
-                    <label className="mt-4">Server Wordlist Path (Optional)</label>
-                    <input
-                      type="text"
-                      className="input input-mono"
-                      value={serverWordlistPath}
-                      onChange={(event) => setServerWordlistPath(event.target.value)}
-                      placeholder="/opt/wordlists/rockyou.txt"
-                      disabled={isActive}
-                    />
-                    <p className="config-desc">
-                      Leave empty to use backend default `WORDLIST_PATH`.
-                    </p>
-                  </>
-                )}
+                {renderWordlistSelect()}
               </div>
             )}
 
             {attackMode === 'bruteforce' && (
               <div className="config-section">
-                <label>Mask</label>
+                <label>{t('attack.mask')}</label>
                 <div className="mask-presets">
-                  {PRESET_MASKS.map((preset, idx) => (
+                  {PRESET_MASKS.map((preset) => (
                     <button
-                      key={idx}
+                      key={preset.mask}
                       className={`preset-btn ${mask === preset.mask ? 'active' : ''}`}
                       onClick={() => setMask(preset.mask)}
                       disabled={isActive}
                     >
-                      {preset.name}
+                      {t(preset.nameKey)}
                     </button>
                   ))}
                 </div>
@@ -373,58 +376,45 @@ function AttackPanel() {
                   type="text"
                   className="input input-mono"
                   value={mask}
-                  onChange={(e) => setMask(e.target.value)}
+                  onChange={(event) => setMask(event.target.value)}
                   placeholder="?d?d?d?d?d?d?d?d"
                   disabled={isActive}
                 />
                 <div className="mask-legend">
-                  <span>?l=a-z</span>
-                  <span>?u=A-Z</span>
-                  <span>?d=0-9</span>
-                  <span>?s=special</span>
-                  <span>?a=all</span>
+                  <span>{t('attack.maskLegend.lowercase')}</span>
+                  <span>{t('attack.maskLegend.uppercase')}</span>
+                  <span>{t('attack.maskLegend.digits')}</span>
+                  <span>{t('attack.maskLegend.special')}</span>
+                  <span>{t('attack.maskLegend.all')}</span>
                 </div>
                 <div className="keyspace-info">
-                  <span>Keyspace: <strong>{formatNumber(currentKeyspace)}</strong></span>
-                  <span>Est. Time: <strong>{formatTime(estimatedTime)}</strong></span>
+                  <span>{t('attack.keyspace')}: <strong>{formatNumber(currentKeyspace)}</strong></span>
+                  <span>{t('attack.estimatedTime')}: <strong>{formatTime(estimatedTime)}</strong></span>
                 </div>
               </div>
             )}
 
             {attackMode === 'hybrid' && (
               <div className="config-section">
-                <label>Wordlist</label>
-                <select
-                  className="select"
-                  value={wordlist}
-                  onChange={(e) => setWordlist(e.target.value)}
-                  disabled={isActive}
-                >
-                  {Object.entries(WORDLISTS).map(([key, wl]) => (
-                    <option key={key} value={key}>
-                      {wl.name} ({formatNumber(wl.size)} words)
-                    </option>
-                  ))}
-                </select>
+                {renderWordlistSelect()}
 
-                <label className="mt-4">Append Mask</label>
+                <label className="mt-4">{t('attack.appendMask')}</label>
                 <input
                   type="text"
                   className="input input-mono"
                   value={hybridMask}
-                  onChange={(e) => setHybridMask(e.target.value)}
+                  onChange={(event) => setHybridMask(event.target.value)}
                   placeholder="?d?d?d"
                   disabled={isActive}
                 />
                 <p className="config-desc">
-                  Appends mask to each word: word + {hybridMask}
+                  {t('attack.hybridMaskDescription', { mask: hybridMask })}
                 </p>
               </div>
             )}
           </div>
         </motion.div>
 
-        {/* Control Panel */}
         <motion.div
           className="panel-card glass-card control-card"
           initial={{ opacity: 0, y: 20 }}
@@ -433,7 +423,7 @@ function AttackPanel() {
         >
           <div className="card-header">
             <Play size={20} />
-            <h3>Controls</h3>
+            <h3>{t('attack.controls')}</h3>
           </div>
 
           <div className="card-content">
@@ -444,7 +434,7 @@ function AttackPanel() {
                 disabled={!targetHash}
               >
                 <Play size={20} />
-                Start Attack
+                {t('attack.startAttack')}
               </button>
             ) : (
               <div className="control-buttons">
@@ -452,17 +442,17 @@ function AttackPanel() {
                   <>
                     {session?.status === 'running' ? (
                       <button className="btn btn-secondary" onClick={pause}>
-                        <Pause size={18} /> Pause
+                        <Pause size={18} /> {t('attack.pause')}
                       </button>
                     ) : (
                       <button className="btn btn-primary" onClick={resume}>
-                        <Play size={18} /> Resume
+                        <Play size={18} /> {t('attack.resume')}
                       </button>
                     )}
                   </>
                 )}
                 <button className="btn btn-danger" onClick={stop}>
-                  <Square size={18} /> Stop
+                  <Square size={18} /> {t('attack.stop')}
                 </button>
               </div>
             )}
@@ -470,21 +460,21 @@ function AttackPanel() {
             {isActive && (
               <div className="attack-status">
                 <div className="status-row">
-                  <span>Status</span>
+                  <span>{t('attack.status')}</span>
                   <span className={`status-value ${session?.status}`}>
-                    {session?.status?.toUpperCase()}
+                    {t(`attack.statusValues.${session?.status || 'idle'}`)}
                   </span>
                 </div>
                 <div className="status-row">
-                  <span>Mode</span>
-                  <span>{session?.attackMode}</span>
+                  <span>{t('attack.mode')}</span>
+                  <span>{t(`attack.modes.${session?.attackMode || 'dictionary'}.name`)}</span>
                 </div>
                 <div className="status-row">
-                  <span>Speed</span>
+                  <span>{t('attack.speed')}</span>
                   <span>{formatSpeed(session?.speed || 0)}</span>
                 </div>
                 <div className="status-row">
-                  <span>Progress</span>
+                  <span>{t('attack.progress')}</span>
                   <span>{(session?.progress || 0).toFixed(2)}%</span>
                 </div>
               </div>
@@ -493,7 +483,7 @@ function AttackPanel() {
             {session?.status === 'completed' && (
               <div className="success-message">
                 <span className="success-icon">🎉</span>
-                <p>Password Found!</p>
+                <p>{t('attack.passwordFound')}</p>
                 <p className="found-password font-mono">{session?.foundPassword}</p>
               </div>
             )}
@@ -501,7 +491,7 @@ function AttackPanel() {
             {session?.status === 'exhausted' && (
               <div className="exhausted-message">
                 <AlertCircle size={24} />
-                <p>Keyspace exhausted. Try a different attack.</p>
+                <p>{t('attack.keyspaceExhausted')}</p>
               </div>
             )}
           </div>

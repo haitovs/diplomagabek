@@ -30,7 +30,7 @@ export function isRealHashcatEnabled() {
   return Boolean(HASHCAT_API_BASE);
 }
 
-export async function createDictionaryJob({ hashId, hash, hashMode = 22000, wordlistPath }) {
+export async function createDictionaryJob({ hashId, hash, hashMode = 22000, wordlistKey }) {
   return request('/api/jobs', {
     method: 'POST',
     body: JSON.stringify({
@@ -38,7 +38,7 @@ export async function createDictionaryJob({ hashId, hash, hashMode = 22000, word
       hash,
       hashMode,
       attackMode: 'dictionary',
-      ...(wordlistPath ? { wordlistPath } : {})
+      ...(wordlistKey ? { wordlistKey } : {})
     })
   });
 }

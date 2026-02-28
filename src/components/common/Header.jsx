@@ -32,8 +32,8 @@ function Header({ onMenuToggle, menuOpen }) {
             value={language}
             onChange={(event) => changeLanguage(event.target.value)}
           >
-            <option value="en">English</option>
-            <option value="tk">Turkmen</option>
+            <option value="en">{t('header.languages.en')}</option>
+            <option value="tk">{t('header.languages.tk')}</option>
           </select>
         </label>
         <div className="header-badge">

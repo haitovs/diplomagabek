@@ -8,6 +8,36 @@ import { buildMask, identifyHashType, scorePassword } from './securityTools.js';
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
 const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || '/opt/wordlists/rockyou.txt';
+const WORDLIST_PRESETS = {
+  rockyou_sample: process.env.WORDLIST_ROCKYOU_SAMPLE_PATH || '/opt/wordlists/rockyou_sample.txt',
+  rockyou: process.env.WORDLIST_ROCKYOU_PATH || DEFAULT_WORDLIST_PATH,
+  top_100k: process.env.WORDLIST_TOP_100K_PATH || '/opt/wordlists/top-100k.txt',
+  probable_v2: process.env.WORDLIST_PROBABLE_V2_PATH || '/opt/wordlists/probable-v2-top1575.txt',
+  wifi_defaults: process.env.WORDLIST_WIFI_DEFAULTS_PATH || '/opt/wordlists/wifi-defaults.txt'
+};
+
+if (process.env.WORDLIST_PRESETS_JSON) {
+  try {
+    const parsed = JSON.parse(process.env.WORDLIST_PRESETS_JSON);
+    if (parsed && typeof parsed === 'object') {
+      Object.assign(WORDLIST_PRESETS, parsed);
+    }
+  } catch (error) {
+    console.warn('[wordlists] Failed to parse WORDLIST_PRESETS_JSON:', error.message);
+  }
+}
+
+function resolveWordlistPath({ wordlistKey, wordlistPath }) {
+  if (wordlistPath) {
+    return wordlistPath;
+  }
+
+  if (wordlistKey && WORDLIST_PRESETS[wordlistKey]) {
+    return WORDLIST_PRESETS[wordlistKey];
+  }
+
+  return DEFAULT_WORDLIST_PATH;
+}
 
 const app = express();
 app.use(cors());
@@ -52,6 +82,7 @@ app.get('/api/health', async (_req, res) => {
     status: 'ok',
     engine: 'real-hashcat',
     defaultWordlistPath: DEFAULT_WORDLIST_PATH,
+    wordlistPresets: WORDLIST_PRESETS,
     time: new Date().toISOString()
   };
 
@@ -71,7 +102,8 @@ app.post('/api/jobs', async (req, res) => {
     hash,
     hashMode = 22000,
     attackMode = 'dictionary',
-    wordlistPath = DEFAULT_WORDLIST_PATH
+    wordlistKey,
+    wordlistPath
   } = req.body || {};
 
   if (!hashId || !hash) {
@@ -84,11 +116,19 @@ app.post('/api/jobs', async (req, res) => {
     });
   }
 
+  if (wordlistKey && !WORDLIST_PRESETS[wordlistKey] && !wordlistPath) {
+    return res.status(400).json({
+      message: `Unknown wordlist preset: ${wordlistKey}`
+    });
+  }
+
+  const resolvedWordlistPath = resolveWordlistPath({ wordlistKey, wordlistPath });
+
   try {
-    await fs.access(wordlistPath);
+    await fs.access(resolvedWordlistPath);
   } catch {
     return res.status(400).json({
-      message: `Wordlist not found: ${wordlistPath}`
+      message: `Wordlist not found: ${resolvedWordlistPath}`
     });
   }
 
@@ -100,7 +140,8 @@ app.post('/api/jobs', async (req, res) => {
     hashId,
     hashMode,
     attackMode,
-    wordlistPath,
+    wordlistPath: resolvedWordlistPath,
+    wordlistKey: wordlistKey || null,
     status: 'pending',
     progress: 0,
     speed: 0,
@@ -118,7 +159,7 @@ app.post('/api/jobs', async (req, res) => {
     jobId,
     hashLine: hash,
     hashMode,
-    wordlistPath,
+    wordlistPath: resolvedWordlistPath,
     onStatus: (patch) => updateJob(jobId, patch),
     onLog: (entry) => appendJobLog(jobId, entry),
     onFinish: (patch) => {

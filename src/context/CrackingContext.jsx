@@ -25,7 +25,7 @@ function buildRealtimeSession(hash, options = {}) {
     hashId: hash.id,
     targetHash: hash,
     attackMode: 'dictionary',
-    wordlist: options.wordlist || 'server_default',
+    wordlist: options.wordlistKey || options.wordlist || 'rockyou',
     mask: null,
     startTime: Date.now(),
     pauseTime: null,
@@ -126,7 +126,7 @@ export function CrackingProvider({ children }) {
         status: 'failed',
         attackMode: newSession.attackMode,
         timeToCrack: Math.floor(newSession.getElapsedTime?.() || 0),
-        failReason: newSession.failReason || 'Keyspace/wordlist exhausted'
+        failReason: newSession.failReason || 'errors.keyspaceWordlistExhausted'
       });
     }
   }, [updateHashData]);
@@ -146,7 +146,7 @@ export function CrackingProvider({ children }) {
           hashId: hash.id,
           targetHash: hash,
           attackMode: 'dictionary',
-          wordlist: job.wordlistPath,
+          wordlist: job.wordlistKey || job.wordlistPath,
           speed: job.speed || 0,
           progress: job.progress || 0,
           candidatesTested: job.candidatesTested || 0,
@@ -234,7 +234,7 @@ export function CrackingProvider({ children }) {
           hashId: hash.id,
           hash: hash.hash,
           hashMode: 22000,
-          wordlistPath: options.wordlistPath
+          wordlistKey: options.wordlistKey || options.wordlist
         });
 
         realJobRef.current.jobId = job.jobId;

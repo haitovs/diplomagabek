@@ -60,6 +60,8 @@ function HashTable() {
     });
     return counters;
   }, [displayedHashes]);
+
+  const enableRowAnimations = displayedHashes.length <= 20;
   
   const handleSort = (key) => {
     setSortConfig(prev => ({
@@ -132,6 +134,19 @@ function HashTable() {
       return t('complexity.unknown');
     }
     return t(`complexity.${complexity}`);
+  };
+
+  const resolveFailureReason = (reason) => {
+    if (!reason) return t('table.noDetails');
+    if (reason.startsWith('errors.')) return t(reason);
+
+    const rawMappings = {
+      'Stopped by user': 'errors.stoppedByUser',
+      'Wordlist exhausted with no result': 'errors.wordlistExhausted'
+    };
+
+    const mappedKey = rawMappings[reason];
+    return mappedKey ? t(mappedKey) : reason;
   };
   
   const SortIcon = ({ column }) => {
@@ -261,10 +276,10 @@ function HashTable() {
               {displayedHashes.slice(0, 50).map((hash, index) => (
                 <motion.tr
                   key={hash.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={enableRowAnimations ? { opacity: 0, y: 10 } : false}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: index * 0.02 }}
+                  transition={enableRowAnimations ? { delay: index * 0.015 } : { duration: 0 }}
                   className={selectedIds.has(hash.id) ? 'selected' : ''}
                 >
                   <td className="col-checkbox">
@@ -298,8 +313,8 @@ function HashTable() {
                   </td>
                   <td className="fail-reason-cell">
                     {hash.status === 'failed'
-                      ? (hash.failReason || t('table.noDetails'))
-                      : '—'}
+                      ? resolveFailureReason(hash.failReason)
+                      : t('table.notApplicable')}
                   </td>
                   <td className="col-actions">
                     <button 
@@ -365,7 +380,7 @@ function HashTable() {
                   <span className="detail-value">{viewHash.ssid}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">BSSID</span>
+                  <span className="detail-label">{t('table.bssid')}</span>
                   <span className="detail-value font-mono">{viewHash.bssid}</span>
                 </div>
                 <div className="detail-row">
@@ -387,7 +402,7 @@ function HashTable() {
                 {viewHash.status === 'failed' && (
                   <div className="detail-row">
                     <span className="detail-label">{t('table.failure')}</span>
-                    <span className="detail-value">{viewHash.failReason || t('table.noDetails')}</span>
+                    <span className="detail-value">{resolveFailureReason(viewHash.failReason)}</span>
                   </div>
                 )}
                 {viewHash.status === 'cracked' && (

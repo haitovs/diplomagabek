@@ -6,7 +6,11 @@
   },
   "header": {
     "educational": "Okuw Maksatly",
-    "language": "Dil"
+    "language": "Dil",
+    "languages": {
+      "en": "Iňlisçe",
+      "tk": "Türkmençe"
+    }
   },
   "nav": {
     "dashboard": "Dolandyryş Paneli",
@@ -35,7 +39,9 @@
     "successRate": "{{value}}% üstünlik derejesi",
     "currentlyCracking": "häzir açylýan: {{value}}",
     "idle": "Boş",
-    "attackInProgress": "Hüjüm dowam edýär"
+    "attackInProgress": "Hüjüm dowam edýär",
+    "typeSplit": "{{pmkid}} PMKID / {{eapol}} EAPOL",
+    "zeroSpeed": "0 H/s"
   },
   "table": {
     "search": "SSID, BSSID, ID gözle...",
@@ -45,6 +51,7 @@
     "allComplexity": "Ähli Çylşyrymlylyk",
     "id": "ID",
     "ssid": "SSID",
+    "bssid": "BSSID",
     "type": "Görnüş",
     "complexity": "Çylşyrymlylyk",
     "status": "Status",
@@ -55,6 +62,7 @@
     "viewDetails": "Jikme-jigi Gör",
     "attack": "Hüjüm",
     "noDetails": "Jikme-jik ýok",
+    "notApplicable": "-",
     "showing": "{{total}} heşden {{shown}} sany görkezilýär",
     "performanceNotice": "(Öndürijilik üçin ilkinji 50 görkezilýär)",
     "hashDetails": "Heşiň Maglumatlary",
@@ -81,6 +89,141 @@
     "successRate": "Üstünlik Derejesi",
     "live": "GÖNI"
   },
+  "attack": {
+    "simulationBanner": {
+      "title": "Simulýasiýa Režimi",
+      "message": "- Serwerde WiFi skaneri elýeterli däl. Okuw görkezmesi üçin simulirlenen torlary döretmekde \"Generate\" ulanyň."
+    },
+    "realBanner": {
+      "title": "Hakyky Hashcat Režimi",
+      "message": "işjeň. Sözlük hüjümleri backend hashcat arkaly işleýär. Brute-force we hybrid režimler backend goldawy bolýança simulýatorda galýar."
+    },
+    "targetHash": "Maksat Heş",
+    "scanRealNetworks": "Hakyky torlary skanerle",
+    "generateSimulatedNetworks": "Simulirlenen torlary döred",
+    "scan": "Skanerle",
+    "generate": "Döret",
+    "scanning": "Skanerlenýär...",
+    "generating": "Döredilýär...",
+    "real": "Hakyky",
+    "realPrefix": "Hakyky",
+    "noTargetSelected": "Maksat saýlanmady",
+    "selectTarget": "Maksat saýla:",
+    "selectHashPlaceholder": "-- Heş saýla --",
+    "attackMode": "Hüjüm Režimi",
+    "configuration": "Sazlama",
+    "selectWordlist": "Wordlist Saýla",
+    "words": "söz",
+    "serverWordlistPath": "Serwer preset ýoly: {{path}}",
+    "mask": "Maska",
+    "maskLegend": {
+      "lowercase": "?l = a-z",
+      "uppercase": "?u = A-Z",
+      "digits": "?d = 0-9",
+      "special": "?s = ýörite",
+      "all": "?a = hemmesi"
+    },
+    "keyspace": "Açar giňişligi",
+    "estimatedTime": "Takmynan wagt",
+    "appendMask": "Maska goş",
+    "hybridMaskDescription": "Maskany her sözüň soňuna goşýar: söz + {{mask}}",
+    "controls": "Dolandyryş",
+    "startAttack": "Hüjümi Başlat",
+    "pause": "Saklat",
+    "resume": "Dowam Et",
+    "stop": "Duruz",
+    "status": "Status",
+    "mode": "Režim",
+    "speed": "Tizlik",
+    "progress": "Ösüş",
+    "passwordFound": "Parol Tapyldy!",
+    "keyspaceExhausted": "Açar giňişligi gutardy. Başga hüjümi synap görüň.",
+    "modes": {
+      "dictionary": {
+        "name": "Sözlük Hüjümi"
+      },
+      "bruteforce": {
+        "name": "Brute-force Hüjümi"
+      },
+      "hybrid": {
+        "name": "Gibrid Hüjüm"
+      }
+    },
+    "statusValues": {
+      "idle": "Boş",
+      "running": "Işleýär",
+      "paused": "Saklandy",
+      "completed": "Tamamlandy",
+      "exhausted": "Gutardy",
+      "stopped": "Duruzylan",
+      "failed": "Şowsuz"
+    },
+    "presets": {
+      "eightDigits": "8 San",
+      "eightLowercase": "8 Kiçi Harp",
+      "commonPattern": "Umumy Nusga",
+      "wordPlusYear": "Söz + Ýyl",
+      "complexEight": "Çylşyrymly 8"
+    }
+  },
+  "progress": {
+    "title": "Açylyş Ösüşi",
+    "running": "Işleýär",
+    "paused": "Saklandy",
+    "progress": "Ösüş",
+    "speed": "Tizlik",
+    "eta": "Galan wagt",
+    "tested": "Synag edilen",
+    "currentCandidate": "Häzirki:",
+    "collectingData": "Maglumat ýygnalýar...",
+    "startToSee": "Ösüşi görmek üçin hüjümi başladyň",
+    "tooltipSpeed": "Tizlik",
+    "tooltipTested": "Synag edilen"
+  },
+  "activity": {
+    "title": "Işjeňlik Žurnaly",
+    "entries": "{{count}} ýazgy",
+    "empty": "Entäk işjeňlik ýok. Žurnaly görmek üçin hüjümi başladyň.",
+    "unknownEntry": "Näbelli žurnal ýazgysy",
+    "log": {
+      "passwordFound": "Parol tapyldy: {{password}}",
+      "wordlistExhausted": "Wordlist gutardy, parol tapylmady",
+      "keyspaceExhausted": "Açar giňişligi gutardy, parol tapylmady",
+      "startDictionary": "{{ssid}} üçin sözlük hüjümi başlady",
+      "wordlistSelected": "Wordlist: {{wordlist}} ({{size}} söz)",
+      "hashType": "Heş görnüşi: {{type}}",
+      "startBruteforce": "{{ssid}} üçin brute-force hüjümi başlady",
+      "maskSelected": "Maska: {{mask}}",
+      "keyspaceValue": "Açar giňişligi: {{keyspace}}",
+      "startHybrid": "{{ssid}} üçin gibrid hüjüm başlady",
+      "hybridConfig": "Wordlist: {{wordlist}} + Maska: {{mask}}",
+      "totalKeyspace": "Jemi açar giňişligi: {{keyspace}}",
+      "attackPaused": "Hüjüm saklandy",
+      "attackResumed": "Hüjüm dowam etdi",
+      "attackStopped": "Hüjüm ulanyjy tarapyndan duruzyldy"
+    }
+  },
+  "results": {
+    "title": "Açylan Parollar",
+    "passwordsRecovered": "{{count}} parol açyldy",
+    "copyPassword": "Paroly göçür",
+    "export": "Eksport",
+    "emptyTitle": "Entäk açylan parol ýok",
+    "emptyDescription": "Parollary açmak üçin garaşylýan heşlere hüjüm başladyň.",
+    "notAvailable": "N/A",
+    "unknown": "Näbelli",
+    "exportFormatsTitle": "Eksport Formatlary",
+    "formats": {
+      "csv": "CSV",
+      "json": "JSON",
+      "potfile": "Potfile"
+    },
+    "formatDescriptions": {
+      "csv": "Excel bilen gabat gelýän vergul bilen bölünen format",
+      "json": "Programmatik ulanyş üçin gurluşly maglumat",
+      "potfile": "Hashcat bilen gabat gelýän hash:password formaty"
+    }
+  },
   "tools": {
     "title": "Howpsuzlyk Gurallary",
     "hashIdentifier": "Heş Görnüşini Kesgitleýji",
@@ -96,6 +239,112 @@
     "symbols": "Nyşanlar",
     "buildMask": "Maska Gur",
     "generatedMask": "Döredilen Maska",
-    "score": "Bal"
+    "score": "Bal",
+    "level": "Dereje",
+    "length": "Uzynlyk",
+    "resultName": "Ady",
+    "resultMode": "Režim",
+    "resultConfidence": "Ynamluluk",
+    "notAvailable": "N/A",
+    "unknown": "Näbelli",
+    "emptyMask": "(boş)",
+    "levelValues": {
+      "very-weak": "Örän gowşak",
+      "weak": "Gowşak",
+      "medium": "Orta",
+      "strong": "Güýçli",
+      "very-strong": "Örän güýçli"
+    },
+    "feedback": {
+      "passwordEmpty": "Parol boş.",
+      "minEightChars": "Iň az 8 simwol ulanyň.",
+      "minTwelveChars": "Has gowy howpsuzlyk üçin 12+ simwol ulanyň.",
+      "mixCase": "Uly we kiçi harplary garyşdyryň.",
+      "addNumbers": "San goşuň.",
+      "addSymbols": "Ýörite nyşan goşuň.",
+      "avoidCommonPatterns": "Gaty umumy patternlerden gaça duruň."
+    }
+  },
+  "wordlists": {
+    "rockyouSample": {
+      "name": "RockYou Nusgasy",
+      "description": "Çalt simulýasiýa we synag üçin kiçi ýerli nusga."
+    },
+    "rockyou": {
+      "name": "rockyou.txt",
+      "description": "Meşhur parol syzmalaryndan uly klassik sözlük."
+    },
+    "top100k": {
+      "name": "Iň meşhur 100K",
+      "description": "Ýokary ýygylykdaky parollar bilen çalt ýerine ýetiriliş."
+    },
+    "probableV2": {
+      "name": "Probable-v2 Top1575",
+      "description": "Hakyky açyş üçin optimizirlenen ähtimally kandidat toplumy."
+    },
+    "wifiDefaults": {
+      "name": "WiFi Default Parollar",
+      "description": "Router öndürijileriniň standart credential nusgalary."
+    }
+  },
+  "about": {
+    "headerTitle": "Hashcat we WiFi Açylyşy Barada",
+    "headerSubtitle": "WPA/WPA2 parol dikeldiş usullaryna düşünmek",
+    "educationalOnlyTitle": "Diňe Okuw Maksatly",
+    "educationalOnlyBody": "Bu programma diňe okuw maksatlary üçin simulýasiýa bolup durýar. Ol hakyky WiFi torlary ýa-da hakyky hashcat guraly bilen göni işleşmeýär. Islendik tory synag etmezden öň degişli rugsady alyň.",
+    "whatIsHashcatTitle": "Hashcat näme?",
+    "whatIsHashcatBody": "Hashcat iň çalt we iň kämil parol dikeldiş gurallarynyň biridir. Ol birnäçe hüjüm strategiýasyny we ýokary derejede optimizirlenen hashing algoritmlerini goldaýar. WiFi synagynda hashcat köplenç WPA/WPA2 handshake ýa-da PMKID maglumatlary bilen ulanylýar.",
+    "features": {
+      "gpu": "GPU Tizlenmesi",
+      "hashTypes": "300+ Heş Görnüşi",
+      "attackModes": "Birnäçe Hüjüm Režimi"
+    },
+    "wifiHashModesTitle": "WiFi Heş Režimleri",
+    "wifiHashModesBody": "Hashcat dürli heş görnüşleri üçin belli mode belgilerini (-m) ulanýar:",
+    "hashModes": {
+      "mode22000": "Häzirki zaman WPA/WPA2 formaty (maslahat berilýär)",
+      "mode2500": "Köne WPA/WPA2 handshake formaty",
+      "mode16800": "Diňe PMKID hüjümi"
+    },
+    "attackModesTitle": "Hüjüm Režimleri",
+    "attackModes": {
+      "dictionary": "Sözlük faýlyndaky parollary synaýar. Giň sözlükler bilen has netijeli.",
+      "bruteforce": "Maska nusgasyna görä ähli mümkin simwol kombinasiýalaryny synaýar. Gysga ýa-da çak edilýän parollar üçin peýdaly.",
+      "hybrid": "Sözlük we maskany birleşdirýär. Mysal: word + ?d?d?d her sözün soňuna 3 san goşýar."
+    },
+    "maskCharactersTitle": "Maska Simwollary",
+    "maskCharactersBody": "Maskalar brute-force hüjümleri üçin simwol toplumyny kesgitleýär:",
+    "maskColumn": "Maska",
+    "characterSetColumn": "Simwol Toplumy",
+    "countColumn": "Sany",
+    "maskChars": {
+      "lowercase": "Kiçi harplar (a-z)",
+      "uppercase": "Uly harplar (A-Z)",
+      "digits": "Sanlar (0-9)",
+      "special": "Ýörite simwollar (!@#$...)",
+      "all": "Ähli çap edilýän ASCII"
+    },
+    "exampleMasksTitle": "Maska Mysallary",
+    "exampleMasks": {
+      "one": "?d?d?d?d?d?d?d?d - 8 belgili PIN (100,000,000 kombinasiýa)",
+      "two": "?u?l?l?l?l?l?d?d - Welcome23 ýaly umumy nusga",
+      "three": "?a?a?a?a?a?a?a?a - 8 simwolly ähli ASCII (6.6 kwadrilion)"
+    },
+    "hc22000Title": "hc22000 Heş Formaty",
+    "hc22000Body": "Häzirki hashcat WPA/WPA2 üçin hc22000 formatyny ulanýar:",
+    "hc22000Pmkid": "PMKID Heşi (WPA*01)",
+    "hc22000Eapol": "EAPOL Heşi (WPA*02)",
+    "resourcesTitle": "Daşarky Çeşmeler",
+    "resources": {
+      "website": "hashcat.net - Resmi Sahypa",
+      "github": "GitHub-da Hashcat",
+      "wiki": "Hashcat Wiki we Dokumentasiýa"
+    }
+  },
+  "errors": {
+    "wordlistExhausted": "Wordlist gutardy, parol tapylmady",
+    "keyspaceExhausted": "Açar giňişligi gutardy, parol tapylmady",
+    "keyspaceWordlistExhausted": "Açar giňişligi/wordlist gutardy",
+    "stoppedByUser": "Ulanyjy tarapyndan duruzyldy"
   }
 }

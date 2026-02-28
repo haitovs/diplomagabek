@@ -1,98 +1,112 @@
 import { motion } from 'framer-motion';
 import {
-    Check,
-    Clock,
-    Copy,
-    Crosshair,
-    Download,
-    File,
-    FileJson,
-    FileText,
-    Key, Wifi
+  Check,
+  Clock,
+  Copy,
+  Crosshair,
+  Download,
+  File,
+  FileJson,
+  FileText,
+  Key,
+  Wifi
 } from 'lucide-react';
 import { useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
+import { useI18n } from '../../context/I18nContext';
 import { exportCrackedHashes, getHashesByStatus } from '../../services/database/hashDB';
 import { formatTime } from '../../services/hashcat/simulator';
 import './CrackedList.css';
 
 function CrackedList() {
   const { database } = useCracking();
+  const { language, t } = useI18n();
   const [copiedId, setCopiedId] = useState(null);
   const [exportFormat, setExportFormat] = useState('csv');
-  
+
   const crackedHashes = database ? getHashesByStatus(database, 'cracked') : [];
-  
+  const locale = language === 'tk' ? 'tk-TM' : 'en-US';
+  const enableCardAnimations = crackedHashes.length <= 24;
+
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
-  
+
   const handleExport = () => {
     if (!database) return;
-    
+
     const content = exportCrackedHashes(database, exportFormat);
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cracked_passwords.${exportFormat === 'potfile' ? 'pot' : exportFormat}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `cracked_passwords.${exportFormat === 'potfile' ? 'pot' : exportFormat}`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
   };
-  
+
   const getAttackIcon = (mode) => {
     switch (mode) {
-      case 'dictionary': return '📖';
-      case 'bruteforce': return '🔨';
-      case 'hybrid': return '🔀';
-      default: return '❓';
+      case 'dictionary':
+        return '📖';
+      case 'bruteforce':
+        return '🔨';
+      case 'hybrid':
+        return '🔀';
+      default:
+        return '❓';
     }
   };
-  
+
+  const getAttackLabel = (mode) => {
+    if (!mode) return t('results.unknown');
+    const key = `attack.modes.${mode}.name`;
+    const translated = t(key);
+    return translated === key ? mode : translated;
+  };
+
   return (
     <div className="cracked-list">
-      {/* Header */}
       <div className="cracked-header">
         <div className="header-info">
           <Key className="header-icon" size={24} />
           <div>
-            <h2>Cracked Passwords</h2>
-            <p>{crackedHashes.length} passwords recovered</p>
+            <h2>{t('results.title')}</h2>
+            <p>{t('results.passwordsRecovered', { count: crackedHashes.length })}</p>
           </div>
         </div>
-        
+
         <div className="export-controls">
-          <select 
+          <select
             className="select"
             value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
+            onChange={(event) => setExportFormat(event.target.value)}
           >
-            <option value="csv">CSV</option>
-            <option value="json">JSON</option>
-            <option value="potfile">Potfile</option>
+            <option value="csv">{t('results.formats.csv')}</option>
+            <option value="json">{t('results.formats.json')}</option>
+            <option value="potfile">{t('results.formats.potfile')}</option>
           </select>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={handleExport}
             disabled={crackedHashes.length === 0}
           >
             <Download size={18} />
-            Export
+            {t('results.export')}
           </button>
         </div>
       </div>
-      
-      {/* Results Grid */}
+
       {crackedHashes.length === 0 ? (
         <div className="empty-state glass-card">
           <Key size={48} />
-          <h3>No Cracked Passwords Yet</h3>
-          <p>Start an attack on pending hashes to recover passwords.</p>
+          <h3>{t('results.emptyTitle')}</h3>
+          <p>{t('results.emptyDescription')}</p>
         </div>
       ) : (
         <div className="results-grid">
@@ -100,9 +114,9 @@ function CrackedList() {
             <motion.div
               key={hash.id}
               className="result-card glass-card"
-              initial={{ opacity: 0, y: 20 }}
+              initial={enableCardAnimations ? { opacity: 0, y: 20 } : false}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={enableCardAnimations ? { delay: index * 0.04 } : { duration: 0 }}
             >
               <div className="result-header">
                 <div className="result-ssid">
@@ -113,63 +127,62 @@ function CrackedList() {
                   {hash.type}
                 </span>
               </div>
-              
+
               <div className="result-password">
                 <span className="password-text">{hash.password}</span>
-                <button 
+                <button
                   className="copy-btn"
                   onClick={() => handleCopy(hash.password, hash.id)}
-                  title="Copy password"
+                  title={t('results.copyPassword')}
                 >
                   {copiedId === hash.id ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
-              
+
               <div className="result-meta">
                 <div className="meta-item">
                   <Crosshair size={14} />
-                  <span>{getAttackIcon(hash.attackMode)} {hash.attackMode || 'Unknown'}</span>
+                  <span>{getAttackIcon(hash.attackMode)} {getAttackLabel(hash.attackMode)}</span>
                 </div>
                 <div className="meta-item">
                   <Clock size={14} />
-                  <span>{hash.timeToCrack ? formatTime(hash.timeToCrack) : 'N/A'}</span>
+                  <span>{hash.timeToCrack ? formatTime(hash.timeToCrack) : t('results.notAvailable')}</span>
                 </div>
               </div>
-              
+
               <div className="result-footer">
                 <span className="bssid font-mono text-xs">{hash.bssid}</span>
                 <span className="cracked-date text-xs text-muted">
-                  {hash.crackedAt ? new Date(hash.crackedAt).toLocaleDateString() : ''}
+                  {hash.crackedAt ? new Date(hash.crackedAt).toLocaleDateString(locale) : ''}
                 </span>
               </div>
             </motion.div>
           ))}
         </div>
       )}
-      
-      {/* Export Format Info */}
+
       <div className="format-info glass-card">
-        <h4>Export Formats</h4>
+        <h4>{t('results.exportFormatsTitle')}</h4>
         <div className="format-list">
           <div className="format-item">
             <FileText size={18} />
             <div>
-              <strong>CSV</strong>
-              <p>Comma-separated, compatible with Excel</p>
+              <strong>{t('results.formats.csv')}</strong>
+              <p>{t('results.formatDescriptions.csv')}</p>
             </div>
           </div>
           <div className="format-item">
             <FileJson size={18} />
             <div>
-              <strong>JSON</strong>
-              <p>Structured data for programmatic use</p>
+              <strong>{t('results.formats.json')}</strong>
+              <p>{t('results.formatDescriptions.json')}</p>
             </div>
           </div>
           <div className="format-item">
             <File size={18} />
             <div>
-              <strong>Potfile</strong>
-              <p>Hashcat-compatible hash:password format</p>
+              <strong>{t('results.formats.potfile')}</strong>
+              <p>{t('results.formatDescriptions.potfile')}</p>
             </div>
           </div>
         </div>

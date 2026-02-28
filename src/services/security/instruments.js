@@ -37,7 +37,7 @@ export function analyzePasswordStrengthLocal(password) {
     return {
       score: 0,
       level: 'very-weak',
-      feedback: ['Password is empty.']
+      feedback: ['tools.feedback.passwordEmpty']
     };
   }
 
@@ -45,23 +45,23 @@ export function analyzePasswordStrengthLocal(password) {
   const feedback = [];
 
   if (password.length >= 8) score += 1;
-  else feedback.push('Use at least 8 characters.');
+  else feedback.push('tools.feedback.minEightChars');
 
   if (password.length >= 12) score += 1;
-  else feedback.push('Use 12+ characters for better security.');
+  else feedback.push('tools.feedback.minTwelveChars');
 
   if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-  else feedback.push('Mix uppercase and lowercase letters.');
+  else feedback.push('tools.feedback.mixCase');
 
   if (/\d/.test(password)) score += 1;
-  else feedback.push('Add numbers.');
+  else feedback.push('tools.feedback.addNumbers');
 
   if (/[^A-Za-z0-9]/.test(password)) score += 1;
-  else feedback.push('Add special symbols.');
+  else feedback.push('tools.feedback.addSymbols');
 
   if (/1234|password|qwerty|admin/i.test(password)) {
     score = Math.max(score - 2, 0);
-    feedback.push('Avoid common patterns.');
+    feedback.push('tools.feedback.avoidCommonPatterns');
   }
 
   const level = score <= 1

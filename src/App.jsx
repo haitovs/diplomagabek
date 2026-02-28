@@ -40,7 +40,6 @@ function AppContent() {
       case 'logs':
         return (
           <div className="logs-page">
-            <h2>{t('nav.logs')}</h2>
             <div className="logs-container glass-card">
               <ActivityLog />
             </div>
