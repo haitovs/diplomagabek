@@ -25,12 +25,16 @@ services:
       WORDLIST_PATH: "/opt/wordlists/rockyou.txt"
       WORDLIST_DIR: "/opt/wordlists"
       DATA_DIR: "/srv/hashcat-data"
+      HASHCAT_CPU_LIMIT_PERCENT: "30"
+      HASHCAT_WORKLOAD_PROFILE: "1"
+      HASHCAT_USE_CPULIMIT: "true"
       # WORDLIST_SHA256: "<set_expected_sha256_here>"
     volumes:
       - wordlists:/opt/wordlists
       - hashcat_data:/srv/hashcat-data
     ports:
       - "8080:8080"
+    cpus: "0.30"
     restart: unless-stopped
 
 volumes:

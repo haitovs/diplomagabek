@@ -2,12 +2,21 @@ const HASHCAT_API_BASE = import.meta.env.VITE_HASHCAT_BACKEND_URL || '';
 
 function buildUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${HASHCAT_API_BASE}${normalizedPath}`;
+  const normalizedBase = HASHCAT_API_BASE.replace(/\/+$/, '');
+
+  if (!normalizedBase) {
+    return `/api${normalizedPath}`;
+  }
+
+  const baseHasApiSuffix = /\/api$/i.test(normalizedBase);
+  return baseHasApiSuffix
+    ? `${normalizedBase}${normalizedPath}`
+    : `${normalizedBase}/api${normalizedPath}`;
 }
 
 async function request(path, options = {}) {
   if (!HASHCAT_API_BASE) {
-    throw new Error('Real hashcat backend URL is not configured. Set VITE_HASHCAT_BACKEND_URL.');
+    throw new Error('Real hashcat backend URL is not configured. Set VITE_HASHCAT_BACKEND_URL (example: /api or http://localhost:8080).');
   }
 
   const response = await fetch(buildUrl(path), {
@@ -31,7 +40,7 @@ export function isRealHashcatEnabled() {
 }
 
 export async function createDictionaryJob({ hashId, hash, hashMode = 22000, wordlistKey }) {
-  return request('/api/jobs', {
+  return request('/jobs', {
     method: 'POST',
     body: JSON.stringify({
       hashId,
@@ -44,32 +53,32 @@ export async function createDictionaryJob({ hashId, hash, hashMode = 22000, word
 }
 
 export async function getJobStatus(jobId) {
-  return request(`/api/jobs/${jobId}`);
+  return request(`/jobs/${jobId}`);
 }
 
 export async function stopJob(jobId) {
-  return request(`/api/jobs/${jobId}/stop`, {
+  return request(`/jobs/${jobId}/stop`, {
     method: 'POST',
     body: JSON.stringify({})
   });
 }
 
 export async function detectHashType(hash) {
-  return request('/api/tools/hash-type', {
+  return request('/tools/hash-type', {
     method: 'POST',
     body: JSON.stringify({ hash })
   });
 }
 
 export async function analyzePasswordStrength(password) {
-  return request('/api/tools/password-strength', {
+  return request('/tools/password-strength', {
     method: 'POST',
     body: JSON.stringify({ password })
   });
 }
 
 export async function buildCustomMask(options) {
-  return request('/api/tools/mask-builder', {
+  return request('/tools/mask-builder', {
     method: 'POST',
     body: JSON.stringify(options)
   });

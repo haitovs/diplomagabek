@@ -3,8 +3,19 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const HASHCAT_BIN = process.env.HASHCAT_BIN || 'hashcat';
+const CPU_LIMIT_BIN = process.env.CPU_LIMIT_BIN || 'cpulimit';
 const DATA_DIR = process.env.DATA_DIR || '/srv/hashcat-data';
 const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || '/opt/wordlists/rockyou.txt';
+const HASHCAT_WORKLOAD_PROFILE = process.env.HASHCAT_WORKLOAD_PROFILE || '1';
+const HASHCAT_CPU_LIMIT_PERCENT = Number(process.env.HASHCAT_CPU_LIMIT_PERCENT || 30);
+const HASHCAT_USE_CPULIMIT = process.env.HASHCAT_USE_CPULIMIT !== 'false';
+
+function isCpuLimitEnabled() {
+  return Number.isFinite(HASHCAT_CPU_LIMIT_PERCENT)
+    && HASHCAT_CPU_LIMIT_PERCENT > 0
+    && HASHCAT_CPU_LIMIT_PERCENT <= 100
+    && HASHCAT_USE_CPULIMIT;
+}
 
 function calculateProgress(statusJson) {
   const progressArray = Array.isArray(statusJson.progress) ? statusJson.progress : null;
@@ -53,6 +64,8 @@ export async function startDictionaryAttack({
     String(hashMode),
     '-a',
     '0',
+    '-w',
+    HASHCAT_WORKLOAD_PROFILE,
     '--status',
     '--status-json',
     '--status-timer',
@@ -67,7 +80,12 @@ export async function startDictionaryAttack({
     wordlistPath
   ];
 
-  const processHandle = spawn(HASHCAT_BIN, args, {
+  const spawnCommand = isCpuLimitEnabled() ? CPU_LIMIT_BIN : HASHCAT_BIN;
+  const spawnArgs = isCpuLimitEnabled()
+    ? ['-f', '-l', String(HASHCAT_CPU_LIMIT_PERCENT), '--', HASHCAT_BIN, ...args]
+    : args;
+
+  const processHandle = spawn(spawnCommand, spawnArgs, {
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
@@ -79,6 +97,11 @@ export async function startDictionaryAttack({
     candidatesTotal: 0,
     speed: 0,
     wordlistPath,
+    resourceLimits: {
+      cpuPercent: isCpuLimitEnabled() ? HASHCAT_CPU_LIMIT_PERCENT : null,
+      workloadProfile: HASHCAT_WORKLOAD_PROFILE,
+      via: isCpuLimitEnabled() ? CPU_LIMIT_BIN : 'hashcat'
+    },
     hashMode
   });
 
@@ -120,6 +143,15 @@ export async function startDictionaryAttack({
   });
 
   processHandle.on('error', async (error) => {
+    if (isCpuLimitEnabled() && error.code === 'ENOENT') {
+      await completeJob({
+        status: 'failed',
+        failReason: `CPU limiter binary not found: ${CPU_LIMIT_BIN}. Install it or set HASHCAT_USE_CPULIMIT=false.`,
+        exitCode: null
+      });
+      return;
+    }
+
     await completeJob({
       status: 'failed',
       failReason: `Failed to start hashcat: ${error.message}`,

@@ -2,6 +2,7 @@ FROM node:20-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    cpulimit \
     curl \
     gzip \
     hashcat \

@@ -39,6 +39,8 @@ npm run server:dev
 
 # Optional: enable real backend mode in frontend
 export VITE_HASHCAT_BACKEND_URL=http://localhost:8080
+# or when frontend is reverse-proxied with /api:
+export VITE_HASHCAT_BACKEND_URL=/api
 ```
 
 Or run both in one command:
@@ -78,7 +80,7 @@ agabel-crack-with-hashcat/
 1. **Dashboard** - View overall statistics and live cracking progress
 2. **Hash Database** - Browse 500+ mock WiFi network hashes
 3. **Attack Panel** - Select target hash and configure attack:
-   - **Dictionary**: Choose wordlist (common, rockyou, etc.)
+   - **Dictionary**: Choose wordlist from preset dropdown (rockyou, top100k, probable-v2, etc.)
    - **Brute-force**: Configure mask pattern (?d?d?d?d...)
    - **Hybrid**: Combine wordlist with mask
 4. **Cracked Passwords** - View and export recovered passwords
@@ -147,6 +149,21 @@ Recommended env:
 - `WORDLIST_URL=<trusted source>`
 - `WORDLIST_SHA256=<expected checksum>`
 - `WORDLIST_PATH=/opt/wordlists/rockyou.txt`
+- `HASHCAT_CPU_LIMIT_PERCENT=30`
+- `HASHCAT_WORKLOAD_PROFILE=1`
+- `HASHCAT_USE_CPULIMIT=true`
+
+Resource cap behavior:
+- `hashcat-api` container is capped to `cpus: "0.30"` in `docker-compose.prod.yml`
+- backend wraps hashcat via `cpulimit -l 30` by default
+- keep both enabled to ensure cracking never exceeds ~30% CPU allocation
+
+Troubleshooting common 404 errors:
+- `vite.svg` 404: ensure `public/vite.svg` exists
+- `jobs` 404: verify API base is correct
+  - valid values: `VITE_HASHCAT_BACKEND_URL=/api` or `http://localhost:8080`
+  - avoid doubled `/api/api/...` routing
+  - in dev, run backend (`npm run server:dev`) and frontend proxy handles `/api`
 
 If real backend mode is disabled, all cracking remains simulated.
 
