@@ -39,6 +39,40 @@ function resolveWordlistPath({ wordlistKey, wordlistPath }) {
   return DEFAULT_WORDLIST_PATH;
 }
 
+async function resolveExistingWordlist({ wordlistKey, wordlistPath }) {
+  const requestedPath = resolveWordlistPath({ wordlistKey, wordlistPath });
+
+  try {
+    await fs.access(requestedPath);
+    return {
+      requestedPath,
+      resolvedPath: requestedPath,
+      fallbackUsed: false
+    };
+  } catch {
+    // Fall back to default path when a selected preset path is unavailable.
+  }
+
+  if (requestedPath !== DEFAULT_WORDLIST_PATH) {
+    try {
+      await fs.access(DEFAULT_WORDLIST_PATH);
+      return {
+        requestedPath,
+        resolvedPath: DEFAULT_WORDLIST_PATH,
+        fallbackUsed: true
+      };
+    } catch {
+      // Continue to hard failure below.
+    }
+  }
+
+  return {
+    requestedPath,
+    resolvedPath: null,
+    fallbackUsed: false
+  };
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
@@ -116,19 +150,11 @@ app.post('/api/jobs', async (req, res) => {
     });
   }
 
-  if (wordlistKey && !WORDLIST_PRESETS[wordlistKey] && !wordlistPath) {
+  const wordlistResolution = await resolveExistingWordlist({ wordlistKey, wordlistPath });
+  const resolvedWordlistPath = wordlistResolution.resolvedPath;
+  if (!resolvedWordlistPath) {
     return res.status(400).json({
-      message: `Unknown wordlist preset: ${wordlistKey}`
-    });
-  }
-
-  const resolvedWordlistPath = resolveWordlistPath({ wordlistKey, wordlistPath });
-
-  try {
-    await fs.access(resolvedWordlistPath);
-  } catch {
-    return res.status(400).json({
-      message: `Wordlist not found: ${resolvedWordlistPath}`
+      message: `Wordlist not found: ${wordlistResolution.requestedPath}`
     });
   }
 
@@ -142,6 +168,8 @@ app.post('/api/jobs', async (req, res) => {
     attackMode,
     wordlistPath: resolvedWordlistPath,
     wordlistKey: wordlistKey || null,
+    requestedWordlistPath: wordlistResolution.requestedPath,
+    fallbackWordlistUsed: wordlistResolution.fallbackUsed,
     status: 'pending',
     progress: 0,
     speed: 0,
@@ -175,7 +203,9 @@ app.post('/api/jobs', async (req, res) => {
 
   return res.status(202).json({
     jobId,
-    statusUrl: `/api/jobs/${jobId}`
+    statusUrl: `/api/jobs/${jobId}`,
+    wordlistPath: resolvedWordlistPath,
+    fallbackWordlistUsed: wordlistResolution.fallbackUsed
   });
 });
 
