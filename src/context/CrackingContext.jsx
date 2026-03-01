@@ -18,6 +18,29 @@ import {
 
 const CrackingContext = createContext(null);
 const REAL_POLL_INTERVAL_MS = 2000;
+const HC22000_REGEX = /^WPA\*(01|02)\*/i;
+
+function isValidHc22000(hashValue) {
+  return typeof hashValue === 'string' && HC22000_REGEX.test(hashValue.trim());
+}
+
+function normalizeFailReason(reason) {
+  if (!reason) return 'errors.hashcatFailed';
+  if (typeof reason === 'string' && reason.startsWith('errors.')) return reason;
+
+  const text = String(reason).toLowerCase();
+  if (text.includes('wordlist exhausted')) return 'errors.wordlistExhausted';
+  if (
+    text.includes('token') ||
+    text.includes('separator unmatched') ||
+    text.includes('signature unmatched') ||
+    text.includes('line-length') ||
+    text.includes('invalid hash')
+  ) {
+    return 'errors.invalidRealHash';
+  }
+  return reason;
+}
 
 function buildRealtimeSession(hash, options = {}) {
   return {
@@ -174,9 +197,8 @@ export function CrackingProvider({ children }) {
         if (job.status === 'failed') {
           handleSessionUpdate({
             ...mappedSession,
-            exhausted: true,
-            status: 'exhausted',
-            failReason: job.failReason
+            status: 'failed',
+            failReason: normalizeFailReason(job.failReason)
           });
           clearRealPolling();
           return;
@@ -219,6 +241,33 @@ export function CrackingProvider({ children }) {
   // Attack controls
   const startAttack = useCallback(async (hash, mode, options = {}) => {
     if (!hash) return;
+
+    if (mode === 'dictionary' && isRealHashcatEnabled() && !isValidHc22000(hash.hash)) {
+      const failReason = 'errors.invalidRealHash';
+
+      setSession((previous) => ({
+        ...previous,
+        status: 'failed',
+        targetHash: hash,
+        attackMode: mode,
+        logs: [
+          ...(previous.logs || []),
+          {
+            type: 'error',
+            key: 'activity.log.invalidRealHash',
+            message: '',
+            timestamp: new Date().toISOString()
+          }
+        ]
+      }));
+
+      updateHashData(hash.id, {
+        status: 'failed',
+        attackMode: mode,
+        failReason
+      });
+      return;
+    }
 
     updateHashData(hash.id, {
       status: 'cracking',

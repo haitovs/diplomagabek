@@ -138,6 +138,7 @@
     "progress": "Progress",
     "passwordFound": "Password Found!",
     "keyspaceExhausted": "Keyspace exhausted. Try a different attack.",
+    "invalidRealHashHint": "Real backend requires a valid hc22000 hash (WPA*01 or WPA*02). Import a real capture hash first.",
     "modes": {
       "dictionary": {
         "name": "Dictionary Attack"
@@ -200,7 +201,8 @@
       "totalKeyspace": "Total keyspace: {{keyspace}}",
       "attackPaused": "Attack paused",
       "attackResumed": "Attack resumed",
-      "attackStopped": "Attack stopped by user"
+      "attackStopped": "Attack stopped by user",
+      "invalidRealHash": "Cannot start real hashcat: selected target hash is not valid hc22000 format."
     }
   },
   "results": {
@@ -345,6 +347,8 @@
     "wordlistExhausted": "Wordlist exhausted, password not found",
     "keyspaceExhausted": "Keyspace exhausted, password not found",
     "keyspaceWordlistExhausted": "Keyspace/wordlist exhausted",
-    "stoppedByUser": "Stopped by user"
+    "stoppedByUser": "Stopped by user",
+    "invalidRealHash": "Selected hash is not valid hc22000 format for real backend.",
+    "hashcatFailed": "Hashcat failed to start or exited with an error."
   }
 }

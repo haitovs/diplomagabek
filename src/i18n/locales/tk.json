@@ -138,6 +138,7 @@
     "progress": "Ösüş",
     "passwordFound": "Parol Tapyldy!",
     "keyspaceExhausted": "Açar giňişligi gutardy. Başga hüjümi synap görüň.",
+    "invalidRealHashHint": "Hakyky backend diňe dogry hc22000 hash (WPA*01 ýa-da WPA*02) bilen işleýär. Ilki hakyky capture hashi import ediň.",
     "modes": {
       "dictionary": {
         "name": "Sözlük Hüjümi"
@@ -200,7 +201,8 @@
       "totalKeyspace": "Jemi açar giňişligi: {{keyspace}}",
       "attackPaused": "Hüjüm saklandy",
       "attackResumed": "Hüjüm dowam etdi",
-      "attackStopped": "Hüjüm ulanyjy tarapyndan duruzyldy"
+      "attackStopped": "Hüjüm ulanyjy tarapyndan duruzyldy",
+      "invalidRealHash": "Hakyky hashcat başladylyp bilinmedi: saýlanan maksat hash hc22000 formatynda däl."
     }
   },
   "results": {
@@ -345,6 +347,8 @@
     "wordlistExhausted": "Wordlist gutardy, parol tapylmady",
     "keyspaceExhausted": "Açar giňişligi gutardy, parol tapylmady",
     "keyspaceWordlistExhausted": "Açar giňişligi/wordlist gutardy",
-    "stoppedByUser": "Ulanyjy tarapyndan duruzyldy"
+    "stoppedByUser": "Ulanyjy tarapyndan duruzyldy",
+    "invalidRealHash": "Saýlanan hash hakyky backend üçin dogry hc22000 formatynda däl.",
+    "hashcatFailed": "Hashcat başladylyp bilmedi ýa-da ýalňyşlyk bilen çykdy."
   }
 }

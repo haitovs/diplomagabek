@@ -53,6 +53,7 @@ function AttackPanel() {
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const isElectron = !!window.electronAPI;
+  const isHc22000Hash = (value) => typeof value === 'string' && /^WPA\*(01|02)\*/i.test(value.trim());
 
   useEffect(() => {
     if (selectedHashes.length > 0) {
@@ -138,6 +139,15 @@ function AttackPanel() {
   const currentKeyspace = calculateKeyspace(attackMode === 'bruteforce' ? mask : hybridMask);
   const estimatedSpeed = 2000;
   const estimatedTime = estimateTime(currentKeyspace, estimatedSpeed);
+  const isRealDictionaryTargetInvalid = Boolean(
+    isRealBackendEnabled &&
+    attackMode === 'dictionary' &&
+    targetHash &&
+    !isHc22000Hash(targetHash.hash)
+  );
+  const failureMessage = session?.failReason
+    ? (session.failReason.startsWith('errors.') ? t(session.failReason) : session.failReason)
+    : t('errors.hashcatFailed');
 
   const attackModes = useMemo(() => ([
     {
@@ -431,7 +441,7 @@ function AttackPanel() {
               <button
                 className="btn btn-primary btn-large"
                 onClick={handleStartAttack}
-                disabled={!targetHash}
+                disabled={!targetHash || isRealDictionaryTargetInvalid}
               >
                 <Play size={20} />
                 {t('attack.startAttack')}
@@ -492,6 +502,20 @@ function AttackPanel() {
               <div className="exhausted-message">
                 <AlertCircle size={24} />
                 <p>{t('attack.keyspaceExhausted')}</p>
+              </div>
+            )}
+
+            {session?.status === 'failed' && (
+              <div className="exhausted-message">
+                <AlertCircle size={24} />
+                <p>{failureMessage}</p>
+              </div>
+            )}
+
+            {isRealDictionaryTargetInvalid && (
+              <div className="exhausted-message">
+                <AlertCircle size={24} />
+                <p>{t('attack.invalidRealHashHint')}</p>
               </div>
             )}
           </div>

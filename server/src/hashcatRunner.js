@@ -107,6 +107,7 @@ export async function startDictionaryAttack({
 
   let finished = false;
   let stdoutBuffer = '';
+  let lastStderrLine = '';
 
   const completeJob = async (payload) => {
     if (finished) return;
@@ -138,6 +139,7 @@ export async function startDictionaryAttack({
   processHandle.stderr.on('data', (chunk) => {
     const message = chunk.toString().trim();
     if (message) {
+      lastStderrLine = message;
       onLog?.({ stream: 'stderr', line: message });
     }
   });
@@ -183,8 +185,8 @@ export async function startDictionaryAttack({
     }
 
     const failReason = exitCode === 0
-      ? 'Wordlist exhausted with no result'
-      : `Hashcat exited with code ${exitCode}`;
+      ? 'errors.wordlistExhausted'
+      : (lastStderrLine || `Hashcat exited with code ${exitCode}`);
 
     await completeJob({
       status: 'failed',
