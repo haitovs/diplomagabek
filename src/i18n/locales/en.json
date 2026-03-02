@@ -58,6 +58,7 @@
     "failureReason": "Failure Reason",
     "actions": "Actions",
     "addHash": "Add Hash",
+    "realOnlyAddDisabled": "Real backend mode allows only imported real hashes.",
     "delete": "Delete",
     "viewDetails": "View Details",
     "attack": "Attack",
@@ -101,6 +102,12 @@
     "targetHash": "Target Hash",
     "scanRealNetworks": "Scan for real networks",
     "generateSimulatedNetworks": "Generate simulated networks",
+    "realOnlyImportHint": "Real-only mode: import captured hc22000 hashes from trusted source.",
+    "importOnly": "Import Only",
+    "importSuccess": "Imported {{count}} real hash(es).",
+    "importNoValidHashes": "No valid hc22000 hashes were found in the selected file.",
+    "importFailed": "Failed to import hash file.",
+    "realBackendDictionaryOnly": "Real backend supports dictionary attack only.",
     "scan": "Scan",
     "generate": "Generate",
     "scanning": "Scanning...",
@@ -202,7 +209,8 @@
       "attackPaused": "Attack paused",
       "attackResumed": "Attack resumed",
       "attackStopped": "Attack stopped by user",
-      "invalidRealHash": "Cannot start real hashcat: selected target hash is not valid hc22000 format."
+      "invalidRealHash": "Cannot start real hashcat: selected target hash is not valid hc22000 format.",
+      "realBackendDictionaryOnly": "Cannot start real hashcat: only dictionary mode is supported."
     }
   },
   "results": {
@@ -349,6 +357,7 @@
     "keyspaceWordlistExhausted": "Keyspace/wordlist exhausted",
     "stoppedByUser": "Stopped by user",
     "invalidRealHash": "Selected hash is not valid hc22000 format for real backend.",
+    "realBackendDictionaryOnly": "Real backend supports dictionary attack only.",
     "hashcatFailed": "Hashcat failed to start or exited with an error."
   }
 }

@@ -22,7 +22,12 @@ const STATUS_META = {
 };
 
 function HashTable() {
-  const { database, refreshDatabase, setActiveTab, setSelectedHashes } = useCracking();
+  const {
+    database,
+    refreshDatabase,
+    setActiveTab,
+    setSelectedHashes
+  } = useCracking();
   const { t } = useI18n();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,7 +212,12 @@ function HashTable() {
         </div>
         
         <div className="toolbar-right">
-          <button className="btn btn-secondary" onClick={handleAddHash}>
+          <button
+            className="btn btn-secondary"
+            onClick={handleAddHash}
+            disabled
+            title={t('table.realOnlyAddDisabled')}
+          >
             <Plus size={18} /> {t('table.addHash')}
           </button>
           {selectedIds.size > 0 && (

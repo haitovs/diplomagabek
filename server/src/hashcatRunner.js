@@ -7,7 +7,11 @@ const CPU_LIMIT_BIN = process.env.CPU_LIMIT_BIN || 'cpulimit';
 const DATA_DIR = process.env.DATA_DIR || '/srv/hashcat-data';
 const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || '/opt/wordlists/rockyou.txt';
 const HASHCAT_WORKLOAD_PROFILE = process.env.HASHCAT_WORKLOAD_PROFILE || '1';
-const HASHCAT_CPU_LIMIT_PERCENT = Number(process.env.HASHCAT_CPU_LIMIT_PERCENT || 30);
+const MAX_CPU_LIMIT_PERCENT = 30;
+const parsedCpuLimit = Number(process.env.HASHCAT_CPU_LIMIT_PERCENT || MAX_CPU_LIMIT_PERCENT);
+const HASHCAT_CPU_LIMIT_PERCENT = Number.isFinite(parsedCpuLimit)
+  ? Math.min(Math.max(parsedCpuLimit, 1), MAX_CPU_LIMIT_PERCENT)
+  : MAX_CPU_LIMIT_PERCENT;
 const HASHCAT_USE_CPULIMIT = process.env.HASHCAT_USE_CPULIMIT !== 'false';
 
 function isCpuLimitEnabled() {

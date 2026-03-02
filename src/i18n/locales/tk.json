@@ -58,6 +58,7 @@
     "failureReason": "Şowsuzlygyň Sebäbi",
     "actions": "Amallar",
     "addHash": "Heş Goş",
+    "realOnlyAddDisabled": "Hakyky backend režiminde diňe import edilen hakyky hashlar rugsat berilýär.",
     "delete": "Poz",
     "viewDetails": "Jikme-jigi Gör",
     "attack": "Hüjüm",
@@ -101,6 +102,12 @@
     "targetHash": "Maksat Heş",
     "scanRealNetworks": "Hakyky torlary skanerle",
     "generateSimulatedNetworks": "Simulirlenen torlary döred",
+    "realOnlyImportHint": "Diňe hakyky režim: ygtybarly çeşmeden capture edilen hc22000 hash import ediň.",
+    "importOnly": "Diňe Import",
+    "importSuccess": "{{count}} sany hakyky hash import edildi.",
+    "importNoValidHashes": "Saýlanan faýlda dogry hc22000 hash tapylmady.",
+    "importFailed": "Hash faýly import edilip bilinmedi.",
+    "realBackendDictionaryOnly": "Hakyky backend diňe sözlük hüjümini goldaýar.",
     "scan": "Skanerle",
     "generate": "Döret",
     "scanning": "Skanerlenýär...",
@@ -202,7 +209,8 @@
       "attackPaused": "Hüjüm saklandy",
       "attackResumed": "Hüjüm dowam etdi",
       "attackStopped": "Hüjüm ulanyjy tarapyndan duruzyldy",
-      "invalidRealHash": "Hakyky hashcat başladylyp bilinmedi: saýlanan maksat hash hc22000 formatynda däl."
+      "invalidRealHash": "Hakyky hashcat başladylyp bilinmedi: saýlanan maksat hash hc22000 formatynda däl.",
+      "realBackendDictionaryOnly": "Hakyky hashcat başladylyp bilinmedi: diňe sözlük režimi goldanýar."
     }
   },
   "results": {
@@ -349,6 +357,7 @@
     "keyspaceWordlistExhausted": "Açar giňişligi/wordlist gutardy",
     "stoppedByUser": "Ulanyjy tarapyndan duruzyldy",
     "invalidRealHash": "Saýlanan hash hakyky backend üçin dogry hc22000 formatynda däl.",
+    "realBackendDictionaryOnly": "Hakyky backend diňe sözlük hüjümini goldaýar.",
     "hashcatFailed": "Hashcat başladylyp bilmedi ýa-da ýalňyşlyk bilen çykdy."
   }
 }

@@ -41,7 +41,7 @@ function AppContent() {
         return (
           <div className="logs-page">
             <div className="logs-container glass-card">
-              <ActivityLog />
+              <ActivityLog showHeader={false} />
             </div>
           </div>
         );

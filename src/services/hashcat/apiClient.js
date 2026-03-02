@@ -2,16 +2,22 @@ const HASHCAT_API_BASE = import.meta.env.VITE_HASHCAT_BACKEND_URL || '';
 
 function buildUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const normalizedBase = HASHCAT_API_BASE.replace(/\/+$/, '');
+  const baseValue = String(HASHCAT_API_BASE).trim();
+  const normalizedBase = baseValue.replace(/\/+$/, '');
 
   if (!normalizedBase) {
     return `/api${normalizedPath}`;
   }
 
-  const baseHasApiSuffix = /\/api$/i.test(normalizedBase);
+  const hasProtocol = /^[a-z][a-z\d+\-.]*:\/\//i.test(normalizedBase);
+  const absoluteBase = hasProtocol
+    ? normalizedBase
+    : (normalizedBase.startsWith('/') ? normalizedBase : `/${normalizedBase}`);
+
+  const baseHasApiSuffix = /\/api$/i.test(absoluteBase);
   return baseHasApiSuffix
-    ? `${normalizedBase}${normalizedPath}`
-    : `${normalizedBase}/api${normalizedPath}`;
+    ? `${absoluteBase}${normalizedPath}`
+    : `${absoluteBase}/api${normalizedPath}`;
 }
 
 async function request(path, options = {}) {

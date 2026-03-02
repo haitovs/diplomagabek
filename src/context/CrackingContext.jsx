@@ -29,6 +29,7 @@ function normalizeFailReason(reason) {
   if (typeof reason === 'string' && reason.startsWith('errors.')) return reason;
 
   const text = String(reason).toLowerCase();
+  if (text.includes('dictionary attacks only')) return 'errors.realBackendDictionaryOnly';
   if (text.includes('wordlist exhausted')) return 'errors.wordlistExhausted';
   if (
     text.includes('token') ||
@@ -241,6 +242,33 @@ export function CrackingProvider({ children }) {
   // Attack controls
   const startAttack = useCallback(async (hash, mode, options = {}) => {
     if (!hash) return;
+
+    if (isRealHashcatEnabled() && mode !== 'dictionary') {
+      const failReason = 'errors.realBackendDictionaryOnly';
+
+      setSession((previous) => ({
+        ...previous,
+        status: 'failed',
+        targetHash: hash,
+        attackMode: mode,
+        logs: [
+          ...(previous.logs || []),
+          {
+            type: 'error',
+            key: 'activity.log.realBackendDictionaryOnly',
+            message: '',
+            timestamp: new Date().toISOString()
+          }
+        ]
+      }));
+
+      updateHashData(hash.id, {
+        status: 'failed',
+        attackMode: mode,
+        failReason
+      });
+      return;
+    }
 
     if (mode === 'dictionary' && isRealHashcatEnabled() && !isValidHc22000(hash.hash)) {
       const failReason = 'errors.invalidRealHash';

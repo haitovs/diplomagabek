@@ -14,10 +14,10 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { importRealNetworks } from '../../services/database/hashDB';
+import { importHashes, importRealNetworks } from '../../services/database/hashDB';
 import { generateMockHash } from '../../services/database/mockGenerator';
 import {
   PRESET_MASKS,
@@ -52,6 +52,8 @@ function AttackPanel() {
   const [hybridMask, setHybridMask] = useState('?d?d?d');
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [importStatus, setImportStatus] = useState(null);
+  const importInputRef = useRef(null);
   const isElectron = !!window.electronAPI;
   const isHc22000Hash = (value) => typeof value === 'string' && /^WPA\*(01|02)\*/i.test(value.trim());
 
@@ -60,6 +62,12 @@ function AttackPanel() {
       setTargetHash(selectedHashes[0]);
     }
   }, [selectedHashes]);
+
+  useEffect(() => {
+    if (isRealBackendEnabled && attackMode !== 'dictionary') {
+      setAttackMode('dictionary');
+    }
+  }, [attackMode, isRealBackendEnabled]);
 
   const pendingHashes = useMemo(
     () => database?.hashes?.filter((hash) => hash.status === 'pending') || [],
@@ -87,6 +95,14 @@ function AttackPanel() {
   };
 
   const handleScanNetworks = async () => {
+    if (!isElectron && isRealBackendEnabled) {
+      if (importInputRef.current) {
+        importInputRef.current.value = '';
+        importInputRef.current.click();
+      }
+      return;
+    }
+
     if (isElectron) {
       setIsScanning(true);
       try {
@@ -134,6 +150,42 @@ function AttackPanel() {
       }
       setIsScanning(false);
     }, 1500);
+  };
+
+  const handleImportHashFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !database) {
+      return;
+    }
+
+    setImportStatus(null);
+
+    try {
+      const content = await file.text();
+      const imported = importHashes(database, content);
+      refreshDatabase();
+
+      if (!imported.length) {
+        setImportStatus({
+          type: 'error',
+          message: t('attack.importNoValidHashes')
+        });
+        return;
+      }
+
+      const firstImported = imported[0];
+      setTargetHash(firstImported);
+      setSelectedHashes([firstImported]);
+      setImportStatus({
+        type: 'success',
+        message: t('attack.importSuccess', { count: imported.length })
+      });
+    } catch {
+      setImportStatus({
+        type: 'error',
+        message: t('attack.importFailed')
+      });
+    }
   };
 
   const currentKeyspace = calculateKeyspace(attackMode === 'bruteforce' ? mask : hybridMask);
@@ -199,6 +251,14 @@ function AttackPanel() {
 
   return (
     <div className="attack-panel">
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".hc22000,.txt,text/plain"
+        style={{ display: 'none' }}
+        onChange={handleImportHashFile}
+      />
+
       {!isElectron && (
         <motion.div
           className="glass-card"
@@ -263,12 +323,20 @@ function AttackPanel() {
                 className="btn btn-secondary btn-sm"
                 onClick={handleScanNetworks}
                 disabled={isScanning || isActive}
-                title={isElectron ? t('attack.scanRealNetworks') : t('attack.generateSimulatedNetworks')}
+                title={
+                  !isElectron && isRealBackendEnabled
+                    ? t('attack.realOnlyImportHint')
+                    : (isElectron ? t('attack.scanRealNetworks') : t('attack.generateSimulatedNetworks'))
+                }
               >
                 <RefreshCw size={14} className={isScanning ? 'spin' : ''} />
                 {isScanning
                   ? (isElectron ? ` ${t('attack.scanning')}` : ` ${t('attack.generating')}`)
-                  : (isElectron ? ` ${t('attack.scan')}` : ` ${t('attack.generate')}`)}
+                  : (
+                    !isElectron && isRealBackendEnabled
+                      ? ` ${t('attack.importOnly')}`
+                      : (isElectron ? ` ${t('attack.scan')}` : ` ${t('attack.generate')}`)
+                  )}
               </button>
             </div>
           </div>
@@ -311,6 +379,18 @@ function AttackPanel() {
                 ))}
               </select>
             </div>
+
+            {importStatus && (
+              <p
+                className="config-desc"
+                style={{
+                  marginTop: '12px',
+                  color: importStatus.type === 'success' ? '#4ade80' : '#fca5a5'
+                }}
+              >
+                {importStatus.message}
+              </p>
+            )}
           </div>
         </motion.div>
 
@@ -334,7 +414,12 @@ function AttackPanel() {
                     key={mode.id}
                     className={`mode-btn ${attackMode === mode.id ? 'active' : ''}`}
                     onClick={() => setAttackMode(mode.id)}
-                    disabled={isActive}
+                    disabled={isActive || (isRealBackendEnabled && mode.id !== 'dictionary')}
+                    title={
+                      isRealBackendEnabled && mode.id !== 'dictionary'
+                        ? t('attack.realBackendDictionaryOnly')
+                        : undefined
+                    }
                   >
                     <Icon size={20} />
                     <div className="mode-info">

@@ -8,6 +8,7 @@ import { buildMask, identifyHashType, scorePassword } from './securityTools.js';
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
 const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || '/opt/wordlists/rockyou.txt';
+const HC22000_REGEX = /^WPA\*(01|02)\*/i;
 const WORDLIST_PRESETS = {
   rockyou_sample: process.env.WORDLIST_ROCKYOU_SAMPLE_PATH || '/opt/wordlists/rockyou_sample.txt',
   rockyou: process.env.WORDLIST_ROCKYOU_PATH || DEFAULT_WORDLIST_PATH,
@@ -80,6 +81,10 @@ app.use(express.json({ limit: '1mb' }));
 const jobs = new Map();
 const controllers = new Map();
 
+function isValidHc22000Hash(hashValue) {
+  return typeof hashValue === 'string' && HC22000_REGEX.test(hashValue.trim());
+}
+
 function getJob(jobId) {
   return jobs.get(jobId);
 }
@@ -140,8 +145,22 @@ app.post('/api/jobs', async (req, res) => {
     wordlistPath
   } = req.body || {};
 
-  if (!hashId || !hash) {
+  const normalizedHash = typeof hash === 'string' ? hash.trim() : '';
+
+  if (!hashId || !normalizedHash) {
     return res.status(400).json({ message: 'hashId and hash are required.' });
+  }
+
+  if (!isValidHc22000Hash(normalizedHash)) {
+    return res.status(400).json({
+      message: 'Invalid hash format. Expected hc22000 line starting with WPA*01* or WPA*02*.'
+    });
+  }
+
+  if (Number(hashMode) !== 22000) {
+    return res.status(400).json({
+      message: 'Real backend currently supports hash mode 22000 only.'
+    });
   }
 
   if (attackMode !== 'dictionary') {
@@ -185,7 +204,7 @@ app.post('/api/jobs', async (req, res) => {
 
   const controller = await startDictionaryAttack({
     jobId,
-    hashLine: hash,
+    hashLine: normalizedHash,
     hashMode,
     wordlistPath: resolvedWordlistPath,
     onStatus: (patch) => updateJob(jobId, patch),
@@ -207,6 +226,24 @@ app.post('/api/jobs', async (req, res) => {
     wordlistPath: resolvedWordlistPath,
     fallbackWordlistUsed: wordlistResolution.fallbackUsed
   });
+});
+
+app.get('/api/jobs', (_req, res) => {
+  const summaries = Array.from(jobs.values())
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+    .slice(0, 100)
+    .map((job) => ({
+      jobId: job.jobId,
+      hashId: job.hashId,
+      status: job.status,
+      progress: job.progress,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
+      finishedAt: job.finishedAt,
+      failReason: job.failReason
+    }));
+
+  return res.json({ jobs: summaries });
 });
 
 app.get('/api/jobs/:jobId', (req, res) => {

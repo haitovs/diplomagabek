@@ -3,13 +3,82 @@
  * Manages the hash database with localStorage persistence
  */
 
-import { generateMockDatabase, generateMockHash, generatePreCrackedHashes } from './mockGenerator';
-
 const STORAGE_KEY = 'hashcracker_database';
-const SETTINGS_KEY = 'hashcracker_settings';
-const SEED_PROFILE = 'demo-v2-100-total-50-cracked';
-const INITIAL_TOTAL_HASHES = 100;
-const INITIAL_CRACKED_PERCENT = 50;
+const SEED_PROFILE = 'real-only-v1';
+const HC22000_REGEX = /^WPA\*(01|02)\*/i;
+const REAL_CATEGORIES = new Set(['imported', 'real_scan', 'real_capture']);
+
+function createEmptyDatabase() {
+  return {
+    version: '1.0.0',
+    generatedAt: new Date().toISOString(),
+    totalCount: 0,
+    seedProfile: SEED_PROFILE,
+    hashes: []
+  };
+}
+
+export function isValidHc22000Hash(hash) {
+  return typeof hash === 'string' && HC22000_REGEX.test(hash.trim());
+}
+
+function isRealCategory(category) {
+  return REAL_CATEGORIES.has(category);
+}
+
+function normalizeRealHashEntry(entry, index) {
+  const hashLine = (entry.hash || '').trim();
+  const hashType = hashLine.startsWith('WPA*01*') ? 'PMKID' : 'EAPOL';
+
+  return {
+    ...entry,
+    id: entry.id || `real_${Date.now()}_${index}`,
+    type: hashType,
+    hash: hashLine,
+    category: isRealCategory(entry.category) ? entry.category : 'real_capture',
+    password: null,
+    complexity: 'unknown',
+    status: ['pending', 'cracking', 'cracked', 'failed'].includes(entry.status) ? entry.status : 'pending',
+    addedAt: entry.addedAt || new Date().toISOString(),
+    crackedAt: entry.crackedAt || null,
+    attackMode: entry.attackMode || null,
+    timeToCrack: entry.timeToCrack || null
+  };
+}
+
+export function cleanupDatabaseToRealHashes(database) {
+  if (!database || !Array.isArray(database.hashes)) {
+    return { removed: 0, total: 0 };
+  }
+
+  const originalCount = database.hashes.length;
+  const seenHashes = new Set();
+  const cleaned = [];
+
+  database.hashes.forEach((entry, index) => {
+    if (!isRealCategory(entry.category) || !isValidHc22000Hash(entry.hash)) {
+      return;
+    }
+
+    const normalized = normalizeRealHashEntry(entry, index);
+    const dedupeKey = normalized.hash.toUpperCase();
+
+    if (seenHashes.has(dedupeKey)) {
+      return;
+    }
+
+    seenHashes.add(dedupeKey);
+    cleaned.push(normalized);
+  });
+
+  database.hashes = cleaned;
+  database.totalCount = cleaned.length;
+  database.seedProfile = SEED_PROFILE;
+  database.generatedAt = database.generatedAt || new Date().toISOString();
+
+  saveDatabase(database);
+  return { removed: originalCount - cleaned.length, total: cleaned.length };
+}
 
 // Initialize or load database
 export function initializeDatabase(forceReset = false) {
@@ -22,7 +91,11 @@ export function initializeDatabase(forceReset = false) {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      if (parsed?.seedProfile === SEED_PROFILE) {
+      if (parsed && typeof parsed === 'object') {
+        if (!Array.isArray(parsed.hashes)) {
+          parsed.hashes = [];
+        }
+        cleanupDatabaseToRealHashes(parsed);
         return parsed;
       }
     } catch (e) {
@@ -30,13 +103,9 @@ export function initializeDatabase(forceReset = false) {
     }
   }
 
-  // Generate new database with 100 hashes, 50% pre-cracked
-  const database = generateMockDatabase(INITIAL_TOTAL_HASHES);
-  const withCracked = generatePreCrackedHashes(database, INITIAL_CRACKED_PERCENT);
-  withCracked.seedProfile = SEED_PROFILE;
-  saveDatabase(withCracked);
-
-  return withCracked;
+  const emptyDatabase = createEmptyDatabase();
+  saveDatabase(emptyDatabase);
+  return emptyDatabase;
 }
 
 // Save database to localStorage
@@ -78,12 +147,8 @@ export function updateHashStatus(database, id, updates) {
 
 // Add new hash
 export function addHash(database) {
-  const newId = database.hashes.length + 1;
-  const newHash = generateMockHash(newId);
-  database.hashes.push(newHash);
-  database.totalCount = database.hashes.length;
-  saveDatabase(database);
-  return newHash;
+  // Intentionally disabled: database now stores real hashes only.
+  return null;
 }
 
 // Delete hash
@@ -129,10 +194,10 @@ export function getStatistics(database) {
 export function searchHashes(database, query) {
   const lowerQuery = query.toLowerCase();
   return database.hashes.filter(h =>
-    h.ssid.toLowerCase().includes(lowerQuery) ||
-    h.bssid.toLowerCase().includes(lowerQuery) ||
-    h.id.toLowerCase().includes(lowerQuery) ||
-    h.type.toLowerCase().includes(lowerQuery)
+    String(h.ssid || '').toLowerCase().includes(lowerQuery) ||
+    String(h.bssid || '').toLowerCase().includes(lowerQuery) ||
+    String(h.id || '').toLowerCase().includes(lowerQuery) ||
+    String(h.type || '').toLowerCase().includes(lowerQuery)
   );
 }
 
@@ -210,10 +275,16 @@ export function exportCrackedHashes(database, format = 'csv') {
 export function importHashes(database, content) {
   const lines = content.trim().split('\n');
   const imported = [];
+  const knownHashes = new Set(
+    (database.hashes || []).map((entry) => String(entry.hash || '').trim().toUpperCase())
+  );
 
   lines.forEach((line, idx) => {
-    if (line.startsWith('WPA*')) {
-      const parts = line.split('*');
+    const normalizedLine = line.trim();
+    const dedupeKey = normalizedLine.toUpperCase();
+
+    if (isValidHc22000Hash(normalizedLine) && !knownHashes.has(dedupeKey)) {
+      const parts = normalizedLine.split('*');
       if (parts.length >= 5) {
         const type = parts[1] === '01' ? 'PMKID' : 'EAPOL';
         const essidHex = parts[5];
@@ -231,13 +302,13 @@ export function importHashes(database, content) {
         const newHash = {
           id: `hash_imp_${Date.now()}_${idx}`,
           type,
-          hash: line,
+          hash: normalizedLine,
           ssid,
           bssid: parts[3].match(/.{2}/g)?.join(':').toUpperCase() || 'Unknown',
           client: parts[4].match(/.{2}/g)?.join(':').toUpperCase() || 'Unknown',
           password: null, // Unknown until cracked
           complexity: 'unknown',
-          category: 'imported',
+          category: 'real_capture',
           addedAt: new Date().toISOString(),
           status: 'pending',
           crackedAt: null,
@@ -247,6 +318,7 @@ export function importHashes(database, content) {
 
         imported.push(newHash);
         database.hashes.push(newHash);
+        knownHashes.add(dedupeKey);
       }
     }
   });
@@ -261,20 +333,25 @@ export function importHashes(database, content) {
 
 // Import real networks from scanner
 export function importRealNetworks(database, networks) {
-  const importedCount = 0;
   const newHashes = [];
 
   networks.forEach((net, idx) => {
+    const capturedHash = (net.hash || net.captureHash || '').trim();
+
+    if (!isValidHc22000Hash(capturedHash)) {
+      return;
+    }
+
+    const hashType = capturedHash.startsWith('WPA*01*') ? 'PMKID' : 'EAPOL';
+
     // Check if SSID already exists to avoid duplicates
     const exists = database.hashes.some(h => h.ssid === net.ssid && h.bssid === net.bssid);
 
     if (!exists && net.ssid && net.ssid !== 'Hidden') {
-      const isPMKID = Math.random() < 0.4;
-
       const newHash = {
         id: `real_${Date.now()}_${idx}`,
-        type: isPMKID ? 'PMKID' : 'EAPOL',
-        hash: 'REAL_HASH_PLACEHOLDER', // In a real scenario, this would be captured
+        type: hashType,
+        hash: capturedHash,
         ssid: net.ssid,
         bssid: net.bssid || 'UNKNOWN',
         client: 'UNKNOWN',
@@ -307,6 +384,8 @@ export function importRealNetworks(database, networks) {
 export default {
   initializeDatabase,
   saveDatabase,
+  isValidHc22000Hash,
+  cleanupDatabaseToRealHashes,
   getAllHashes,
   getHashesByStatus,
   getHashById,

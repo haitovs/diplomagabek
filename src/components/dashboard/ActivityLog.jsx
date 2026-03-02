@@ -6,7 +6,7 @@ import { useI18n } from '../../context/I18nContext';
 import { WORDLISTS } from '../../services/hashcat/simulator';
 import './ActivityLog.css';
 
-function ActivityLog() {
+function ActivityLog({ showHeader = true }) {
   const { session } = useCracking();
   const { language, t } = useI18n();
   const logsEndRef = useRef(null);
@@ -71,11 +71,13 @@ function ActivityLog() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      <div className="log-header">
-        <Terminal size={18} />
-        <h3>{t('activity.title')}</h3>
-        <span className="log-count">{t('activity.entries', { count: logs.length })}</span>
-      </div>
+      {showHeader && (
+        <div className="log-header">
+          <Terminal size={18} />
+          <h3>{t('activity.title')}</h3>
+          <span className="log-count">{t('activity.entries', { count: logs.length })}</span>
+        </div>
+      )}
 
       <div className="log-content">
         {resolvedLogs.length === 0 ? (
