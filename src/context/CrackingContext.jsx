@@ -1,18 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { getStatistics, initializeDatabase, saveDatabase } from '../services/database/hashDB';
 import {
-  getSession,
-  pauseAttack,
-  resumeAttack,
-  startBruteforceAttack,
-  startDictionaryAttack,
-  startHybridAttack,
-  stopAttack
-} from '../services/hashcat/simulator';
-import {
+  createBruteforceJob,
   createDictionaryJob,
+  createHybridJob,
   getJobStatus,
-  isRealHashcatEnabled,
   stopJob
 } from '../services/hashcat/apiClient';
 
@@ -29,7 +21,6 @@ function normalizeFailReason(reason) {
   if (typeof reason === 'string' && reason.startsWith('errors.')) return reason;
 
   const text = String(reason).toLowerCase();
-  if (text.includes('dictionary attacks only')) return 'errors.realBackendDictionaryOnly';
   if (text.includes('wordlist exhausted')) return 'errors.wordlistExhausted';
   if (
     text.includes('token') ||
@@ -43,14 +34,14 @@ function normalizeFailReason(reason) {
   return reason;
 }
 
-function buildRealtimeSession(hash, options = {}) {
+function buildRealtimeSession(hash, mode, options = {}) {
   return {
     status: 'running',
     hashId: hash.id,
     targetHash: hash,
-    attackMode: 'dictionary',
-    wordlist: options.wordlistKey || options.wordlist || 'rockyou',
-    mask: null,
+    attackMode: mode,
+    wordlist: options.wordlistKey || options.wordlist || null,
+    mask: options.mask || null,
     startTime: Date.now(),
     pauseTime: null,
     totalPauseTime: 0,
@@ -66,10 +57,28 @@ function buildRealtimeSession(hash, options = {}) {
   };
 }
 
+const INITIAL_SESSION = {
+  status: 'idle',
+  hashId: null,
+  targetHash: null,
+  attackMode: null,
+  wordlist: null,
+  mask: null,
+  startTime: null,
+  speed: 0,
+  progress: 0,
+  candidatesTested: 0,
+  candidatesTotal: 0,
+  currentCandidate: '',
+  foundPassword: null,
+  eta: null,
+  logs: []
+};
+
 export function CrackingProvider({ children }) {
   const [database, setDatabase] = useState(null);
   const [stats, setStats] = useState(null);
-  const [session, setSession] = useState(getSession());
+  const [session, setSession] = useState(INITIAL_SESSION);
   const [selectedHashes, setSelectedHashes] = useState([]);
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -141,7 +150,7 @@ export function CrackingProvider({ children }) {
         attackMode: newSession.attackMode,
         timeToCrack: Math.floor(newSession.getElapsedTime?.() || 0),
         failReason: null,
-        password: newSession.foundPassword || newSession.targetHash?.password || null
+        password: newSession.foundPassword || null
       });
     }
 
@@ -155,7 +164,7 @@ export function CrackingProvider({ children }) {
     }
   }, [updateHashData]);
 
-  const pollRealJob = useCallback((jobId, hash) => {
+  const pollRealJob = useCallback((jobId, hash, mode) => {
     const poll = async () => {
       try {
         const job = await getJobStatus(jobId);
@@ -169,7 +178,7 @@ export function CrackingProvider({ children }) {
             : job.status,
           hashId: hash.id,
           targetHash: hash,
-          attackMode: 'dictionary',
+          attackMode: mode,
           wordlist: job.wordlistKey || job.wordlistPath,
           speed: job.speed || 0,
           progress: job.progress || 0,
@@ -243,34 +252,7 @@ export function CrackingProvider({ children }) {
   const startAttack = useCallback(async (hash, mode, options = {}) => {
     if (!hash) return;
 
-    if (isRealHashcatEnabled() && mode !== 'dictionary') {
-      const failReason = 'errors.realBackendDictionaryOnly';
-
-      setSession((previous) => ({
-        ...previous,
-        status: 'failed',
-        targetHash: hash,
-        attackMode: mode,
-        logs: [
-          ...(previous.logs || []),
-          {
-            type: 'error',
-            key: 'activity.log.realBackendDictionaryOnly',
-            message: '',
-            timestamp: new Date().toISOString()
-          }
-        ]
-      }));
-
-      updateHashData(hash.id, {
-        status: 'failed',
-        attackMode: mode,
-        failReason
-      });
-      return;
-    }
-
-    if (mode === 'dictionary' && isRealHashcatEnabled() && !isValidHc22000(hash.hash)) {
+    if (!isValidHc22000(hash.hash)) {
       const failReason = 'errors.invalidRealHash';
 
       setSession((previous) => ({
@@ -302,80 +284,68 @@ export function CrackingProvider({ children }) {
       failReason: null
     });
 
-    if (mode === 'dictionary' && isRealHashcatEnabled()) {
-      try {
-        const baseSession = buildRealtimeSession(hash, options);
-        setSession(baseSession);
+    try {
+      const baseSession = buildRealtimeSession(hash, mode, options);
+      setSession(baseSession);
 
-        const job = await createDictionaryJob({
+      let job;
+
+      if (mode === 'bruteforce') {
+        job = await createBruteforceJob({
+          hashId: hash.id,
+          hash: hash.hash,
+          hashMode: 22000,
+          mask: options.mask
+        });
+      } else if (mode === 'hybrid') {
+        job = await createHybridJob({
+          hashId: hash.id,
+          hash: hash.hash,
+          hashMode: 22000,
+          wordlistKey: options.wordlistKey || options.wordlist,
+          mask: options.mask
+        });
+      } else {
+        job = await createDictionaryJob({
           hashId: hash.id,
           hash: hash.hash,
           hashMode: 22000,
           wordlistKey: options.wordlistKey || options.wordlist
         });
-
-        realJobRef.current.jobId = job.jobId;
-        realJobRef.current.startTime = Date.now();
-        realJobRef.current.hashId = hash.id;
-
-        pollRealJob(job.jobId, hash);
-      } catch (error) {
-        setSession((previous) => ({
-          ...previous,
-          status: 'failed',
-          logs: [
-            ...(previous.logs || []),
-            {
-              type: 'error',
-              message: error.message,
-              timestamp: new Date().toISOString()
-            }
-          ]
-        }));
-
-        updateHashData(hash.id, {
-          status: 'failed',
-          failReason: error.message
-        });
       }
-      return;
-    }
 
-    let newSession;
-    switch (mode) {
-      case 'dictionary':
-        newSession = startDictionaryAttack(hash, options.wordlist, handleSessionUpdate);
-        break;
-      case 'bruteforce':
-        newSession = startBruteforceAttack(hash, options.mask, handleSessionUpdate);
-        break;
-      case 'hybrid':
-        newSession = startHybridAttack(hash, options.wordlist, options.mask, handleSessionUpdate);
-        break;
-      default:
-        return;
-    }
+      realJobRef.current.jobId = job.jobId;
+      realJobRef.current.startTime = Date.now();
+      realJobRef.current.hashId = hash.id;
 
-    setSession({ ...newSession });
-  }, [handleSessionUpdate, pollRealJob, updateHashData]);
+      pollRealJob(job.jobId, hash, mode);
+    } catch (error) {
+      setSession((previous) => ({
+        ...previous,
+        status: 'failed',
+        logs: [
+          ...(previous.logs || []),
+          {
+            type: 'error',
+            message: error.message,
+            timestamp: new Date().toISOString()
+          }
+        ]
+      }));
+
+      updateHashData(hash.id, {
+        status: 'failed',
+        failReason: error.message
+      });
+    }
+  }, [pollRealJob, updateHashData]);
 
   const pause = useCallback(() => {
-    if (realJobRef.current.jobId) {
-      // Hashcat pause is intentionally unsupported via this API layer.
-      return;
-    }
-
-    const newSession = pauseAttack();
-    setSession({ ...newSession });
+    // Hashcat does not support pause via REST API
   }, []);
 
   const resume = useCallback(() => {
-    if (realJobRef.current.jobId) {
-      return;
-    }
-
-    const newSession = resumeAttack();
-    setSession({ ...newSession });
+    // Hashcat does not support resume via REST API
   }, []);
 
   const stop = useCallback(async () => {
@@ -397,20 +367,8 @@ export function CrackingProvider({ children }) {
       }));
 
       updateHashData(hashId, { status: 'pending' });
-      return;
     }
-
-    const newSession = stopAttack();
-    setSession({ ...newSession });
-
-    if (database && newSession.hashId) {
-      const hashIndex = database.hashes.findIndex((hash) => hash.id === newSession.hashId);
-      if (hashIndex !== -1 && database.hashes[hashIndex].status === 'cracking') {
-        database.hashes[hashIndex].status = 'pending';
-        refreshDatabase();
-      }
-    }
-  }, [clearRealPolling, database, refreshDatabase, updateHashData]);
+  }, [clearRealPolling, updateHashData]);
 
   // Reset database
   const resetDatabase = useCallback(() => {
@@ -428,7 +386,6 @@ export function CrackingProvider({ children }) {
     refreshDatabase,
     session,
     isActive: session?.status === 'running' || session?.status === 'paused',
-    isRealBackendEnabled: isRealHashcatEnabled(),
     startAttack,
     pause,
     resume,

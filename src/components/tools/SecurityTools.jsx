@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { KeyRound, Layers, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
-import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
 import {
   analyzePasswordStrength,
@@ -16,7 +15,6 @@ import {
 import './SecurityTools.css';
 
 function SecurityTools() {
-  const { isRealBackendEnabled } = useCracking();
   const { t } = useI18n();
 
   const [hashInput, setHashInput] = useState('');
@@ -43,42 +41,36 @@ function SecurityTools() {
   const handleHashDetect = async () => {
     if (!hashInput.trim()) return;
 
-    if (isRealBackendEnabled) {
-      try {
-        const result = await detectHashType(hashInput.trim());
-        setHashResult(result);
-        return;
-      } catch {
-        // Fallback to local detector when backend tool route is unreachable.
-      }
+    try {
+      const result = await detectHashType(hashInput.trim());
+      setHashResult(result);
+      return;
+    } catch {
+      // Fallback to local detector when backend is unreachable.
     }
 
     setHashResult(identifyHashTypeLocal(hashInput));
   };
 
   const handlePasswordAnalyze = async () => {
-    if (isRealBackendEnabled) {
-      try {
-        const result = await analyzePasswordStrength(passwordInput);
-        setPasswordResult(result);
-        return;
-      } catch {
-        // Fallback to local analyzer.
-      }
+    try {
+      const result = await analyzePasswordStrength(passwordInput);
+      setPasswordResult(result);
+      return;
+    } catch {
+      // Fallback to local analyzer.
     }
 
     setPasswordResult(analyzePasswordStrengthLocal(passwordInput));
   };
 
   const handleBuildMask = async () => {
-    if (isRealBackendEnabled) {
-      try {
-        const result = await buildCustomMask(maskParams);
-        setMaskResult(result);
-        return;
-      } catch {
-        // Fallback to local mask builder.
-      }
+    try {
+      const result = await buildCustomMask(maskParams);
+      setMaskResult(result);
+      return;
+    } catch {
+      // Fallback to local mask builder.
     }
 
     setMaskResult(buildMaskLocal(maskParams));

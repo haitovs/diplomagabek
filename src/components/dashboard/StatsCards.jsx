@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Clock, Database, Key, Zap } from 'lucide-react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { formatNumber, formatSpeed } from '../../services/hashcat/simulator';
+import { formatNumber, formatSpeed } from '../../services/hashcat/constants';
 import './StatsCards.css';
 
 function StatsCards() {

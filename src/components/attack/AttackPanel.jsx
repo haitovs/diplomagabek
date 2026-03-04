@@ -7,18 +7,16 @@ import {
   Combine,
   Hash,
   Info,
-  Pause,
   Play,
   RefreshCw,
   Square,
   Target,
   Zap
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
 import { importHashes, importRealNetworks } from '../../services/database/hashDB';
-import { generateMockHash } from '../../services/database/mockGenerator';
 import {
   PRESET_MASKS,
   WORDLISTS,
@@ -27,7 +25,7 @@ import {
   formatNumber,
   formatSpeed,
   formatTime
-} from '../../services/hashcat/simulator';
+} from '../../services/hashcat/constants';
 import './AttackPanel.css';
 
 function AttackPanel() {
@@ -38,10 +36,7 @@ function AttackPanel() {
     setSelectedHashes,
     session,
     isActive,
-    isRealBackendEnabled,
     startAttack,
-    pause,
-    resume,
     stop
   } = useCracking();
   const { t } = useI18n();
@@ -62,12 +57,6 @@ function AttackPanel() {
       setTargetHash(selectedHashes[0]);
     }
   }, [selectedHashes]);
-
-  useEffect(() => {
-    if (isRealBackendEnabled && attackMode !== 'dictionary') {
-      setAttackMode('dictionary');
-    }
-  }, [attackMode, isRealBackendEnabled]);
 
   const pendingHashes = useMemo(
     () => database?.hashes?.filter((hash) => hash.status === 'pending') || [],
@@ -95,7 +84,7 @@ function AttackPanel() {
   };
 
   const handleScanNetworks = async () => {
-    if (!isElectron && isRealBackendEnabled) {
+    if (!isElectron) {
       if (importInputRef.current) {
         importInputRef.current.value = '';
         importInputRef.current.click();
@@ -103,53 +92,25 @@ function AttackPanel() {
       return;
     }
 
-    if (isElectron) {
-      setIsScanning(true);
-      try {
-        const result = await window.electronAPI.scanNetworks();
-        if (result.success && result.networks.length > 0) {
-          importRealNetworks(database, result.networks);
-          refreshDatabase();
-          if (!targetHash && result.networks.length > 0) {
-            const firstReal = database.hashes.find((hash) => hash.ssid === result.networks[0].ssid);
-            if (firstReal) {
-              setTargetHash(firstReal);
-              setSelectedHashes([firstReal]);
-            }
+    setIsScanning(true);
+    try {
+      const result = await window.electronAPI.scanNetworks();
+      if (result.success && result.networks.length > 0) {
+        importRealNetworks(database, result.networks);
+        refreshDatabase();
+        if (!targetHash && result.networks.length > 0) {
+          const firstReal = database.hashes.find((hash) => hash.ssid === result.networks[0].ssid);
+          if (firstReal) {
+            setTargetHash(firstReal);
+            setSelectedHashes([firstReal]);
           }
         }
-      } catch (error) {
-        console.error('Scan failed:', error);
-      } finally {
-        setIsScanning(false);
       }
-      return;
-    }
-
-    setIsScanning(true);
-    setTimeout(() => {
-      const mockNets = [];
-      for (let i = 0; i < 5; i += 1) {
-        const mock = generateMockHash(Date.now() + i);
-        mockNets.push({
-          ssid: mock.ssid,
-          bssid: mock.bssid,
-          rssi: String(-1 * (40 + Math.floor(Math.random() * 50))),
-          channel: String(Math.floor(Math.random() * 11) + 1),
-          security: mock.type === 'PMKID' ? 'WPA2' : 'WPA',
-          type: 'Simulated'
-        });
-      }
-
-      importRealNetworks(database, mockNets);
-      refreshDatabase();
-      if (!targetHash && database.hashes.length > 0) {
-        const newest = database.hashes[database.hashes.length - 1];
-        setTargetHash(newest);
-        setSelectedHashes([newest]);
-      }
+    } catch (error) {
+      console.error('Scan failed:', error);
+    } finally {
       setIsScanning(false);
-    }, 1500);
+    }
   };
 
   const handleImportHashFile = async (event) => {
@@ -191,9 +152,7 @@ function AttackPanel() {
   const currentKeyspace = calculateKeyspace(attackMode === 'bruteforce' ? mask : hybridMask);
   const estimatedSpeed = 2000;
   const estimatedTime = estimateTime(currentKeyspace, estimatedSpeed);
-  const isRealDictionaryTargetInvalid = Boolean(
-    isRealBackendEnabled &&
-    attackMode === 'dictionary' &&
+  const isTargetInvalid = Boolean(
     targetHash &&
     !isHc22000Hash(targetHash.hash)
   );
@@ -241,7 +200,7 @@ function AttackPanel() {
         ))}
       </select>
       <p className="config-desc">{t(selectedWordlist.descriptionKey)}</p>
-      {isRealBackendEnabled && selectedWordlist?.serverPath && (
+      {selectedWordlist?.serverPath && (
         <p className="config-desc">
           {t('attack.serverWordlistPath', { path: selectedWordlist.serverPath })}
         </p>
@@ -259,55 +218,28 @@ function AttackPanel() {
         onChange={handleImportHashFile}
       />
 
-      {!isElectron && (
-        <motion.div
-          className="glass-card"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            marginBottom: '16px',
-            background: 'rgba(59, 130, 246, 0.1)',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-            borderRadius: '10px',
-            fontSize: '13px',
-            color: '#93c5fd'
-          }}
-        >
-          <Info size={18} style={{ flexShrink: 0, color: '#60a5fa' }} />
-          <span>
-            <strong>{t('attack.simulationBanner.title')}</strong> {t('attack.simulationBanner.message')}
-          </span>
-        </motion.div>
-      )}
-
-      {isRealBackendEnabled && (
-        <motion.div
-          className="glass-card"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            marginBottom: '16px',
-            background: 'rgba(34, 197, 94, 0.12)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            borderRadius: '10px',
-            fontSize: '13px',
-            color: '#86efac'
-          }}
-        >
-          <Info size={18} style={{ flexShrink: 0, color: '#4ade80' }} />
-          <span>
-            <strong>{t('attack.realBanner.title')}</strong> {t('attack.realBanner.message')}
-          </span>
-        </motion.div>
-      )}
+      <motion.div
+        className="glass-card"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px 16px',
+          marginBottom: '16px',
+          background: 'rgba(34, 197, 94, 0.12)',
+          border: '1px solid rgba(34, 197, 94, 0.3)',
+          borderRadius: '10px',
+          fontSize: '13px',
+          color: '#86efac'
+        }}
+      >
+        <Info size={18} style={{ flexShrink: 0, color: '#4ade80' }} />
+        <span>
+          <strong>{t('attack.backendBanner.title')}</strong> {t('attack.backendBanner.message')}
+        </span>
+      </motion.div>
 
       <div className="attack-grid">
         <motion.div
@@ -324,19 +256,16 @@ function AttackPanel() {
                 onClick={handleScanNetworks}
                 disabled={isScanning || isActive}
                 title={
-                  !isElectron && isRealBackendEnabled
-                    ? t('attack.realOnlyImportHint')
-                    : (isElectron ? t('attack.scanRealNetworks') : t('attack.generateSimulatedNetworks'))
+                  isElectron
+                    ? t('attack.scanRealNetworks')
+                    : t('attack.realOnlyImportHint')
                 }
               >
                 <RefreshCw size={14} className={isScanning ? 'spin' : ''} />
                 {isScanning
-                  ? (isElectron ? ` ${t('attack.scanning')}` : ` ${t('attack.generating')}`)
-                  : (
-                    !isElectron && isRealBackendEnabled
-                      ? ` ${t('attack.importOnly')}`
-                      : (isElectron ? ` ${t('attack.scan')}` : ` ${t('attack.generate')}`)
-                  )}
+                  ? (isElectron ? ` ${t('attack.scanning')}` : ` ${t('attack.scanning')}`)
+                  : (isElectron ? ` ${t('attack.scan')}` : ` ${t('attack.importOnly')}`)
+                }
               </button>
             </div>
           </div>
@@ -414,12 +343,7 @@ function AttackPanel() {
                     key={mode.id}
                     className={`mode-btn ${attackMode === mode.id ? 'active' : ''}`}
                     onClick={() => setAttackMode(mode.id)}
-                    disabled={isActive || (isRealBackendEnabled && mode.id !== 'dictionary')}
-                    title={
-                      isRealBackendEnabled && mode.id !== 'dictionary'
-                        ? t('attack.realBackendDictionaryOnly')
-                        : undefined
-                    }
+                    disabled={isActive}
                   >
                     <Icon size={20} />
                     <div className="mode-info">
@@ -526,26 +450,13 @@ function AttackPanel() {
               <button
                 className="btn btn-primary btn-large"
                 onClick={handleStartAttack}
-                disabled={!targetHash || isRealDictionaryTargetInvalid}
+                disabled={!targetHash || isTargetInvalid}
               >
                 <Play size={20} />
                 {t('attack.startAttack')}
               </button>
             ) : (
               <div className="control-buttons">
-                {!isRealBackendEnabled && (
-                  <>
-                    {session?.status === 'running' ? (
-                      <button className="btn btn-secondary" onClick={pause}>
-                        <Pause size={18} /> {t('attack.pause')}
-                      </button>
-                    ) : (
-                      <button className="btn btn-primary" onClick={resume}>
-                        <Play size={18} /> {t('attack.resume')}
-                      </button>
-                    )}
-                  </>
-                )}
                 <button className="btn btn-danger" onClick={stop}>
                   <Square size={18} /> {t('attack.stop')}
                 </button>
@@ -597,7 +508,7 @@ function AttackPanel() {
               </div>
             )}
 
-            {isRealDictionaryTargetInvalid && (
+            {isTargetInvalid && (
               <div className="exhausted-message">
                 <AlertCircle size={24} />
                 <p>{t('attack.invalidRealHashHint')}</p>

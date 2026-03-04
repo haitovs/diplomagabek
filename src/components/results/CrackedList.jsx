@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
 import { exportCrackedHashes, getHashesByStatus } from '../../services/database/hashDB';
-import { formatTime } from '../../services/hashcat/simulator';
+import { formatTime } from '../../services/hashcat/constants';
 import './CrackedList.css';
 
 function CrackedList() {

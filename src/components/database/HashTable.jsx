@@ -1,12 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+    CheckCircle2,
     ChevronDown,
     ChevronUp,
     Crosshair,
     Eye,
     Plus,
     Search,
-    Trash2
+    Trash2,
+    X,
+    Zap
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
@@ -19,6 +22,17 @@ const STATUS_META = {
   cracking: { labelKey: 'status.cracking', badge: 'badge-info animate-pulse' },
   cracked: { labelKey: 'status.cracked', badge: 'badge-success' },
   failed: { labelKey: 'status.failed', badge: 'badge-danger' }
+};
+const ADD_HASH_INITIAL_STATE = {
+  source: 'word',
+  ssid: '',
+  bssid: '',
+  client: '',
+  type: 'PMKID',
+  word: '',
+  hashLine: '',
+  password: '',
+  markAsCracked: false
 };
 
 function HashTable() {
@@ -35,6 +49,11 @@ function HashTable() {
   const [sortConfig, setSortConfig] = useState({ key: 'id', ascending: true });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [viewHash, setViewHash] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState(ADD_HASH_INITIAL_STATE);
+  const [addError, setAddError] = useState('');
+  const [addSuccess, setAddSuccess] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
   
   // Filter and sort hashes
   const displayedHashes = useMemo(() => {
@@ -94,9 +113,73 @@ function HashTable() {
   };
   
   const handleAddHash = () => {
-    if (database) {
-      addHash(database);
+    setAddError('');
+    setShowAddModal(true);
+  };
+
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    setAddError('');
+    setAddForm(ADD_HASH_INITIAL_STATE);
+  };
+
+  const handleAddFormChange = (field, value) => {
+    setAddForm((previous) => ({
+      ...previous,
+      [field]: value
+    }));
+  };
+
+  const resolveMessage = (value, fallbackKey) => {
+    if (!value) {
+      return t(fallbackKey);
+    }
+    const translated = t(value);
+    return translated !== value ? translated : value;
+  };
+
+  const handleSubmitAddHash = (event) => {
+    event.preventDefault();
+    if (!database || isAdding) {
+      return;
+    }
+
+    setIsAdding(true);
+    setAddError('');
+
+    try {
+      const payload = addForm.source === 'hash'
+        ? {
+          source: 'hash',
+          hashLine: addForm.hashLine,
+          ssid: addForm.ssid,
+          bssid: addForm.bssid,
+          client: addForm.client,
+          password: addForm.password,
+          markAsCracked: addForm.markAsCracked
+        }
+        : {
+          source: 'word',
+          word: addForm.word,
+          ssid: addForm.ssid,
+          bssid: addForm.bssid,
+          client: addForm.client,
+          type: addForm.type,
+          markAsCracked: addForm.markAsCracked
+        };
+
+      const created = addHash(database, payload);
+      if (!created) {
+        throw new Error('table.addHashValidation.generic');
+      }
+
       refreshDatabase();
+      setAddSuccess(t('table.addHashCreated'));
+      closeAddModal();
+    } catch (error) {
+      setAddError(resolveMessage(error?.message, 'table.addHashValidation.generic'));
+    } finally {
+      setIsAdding(false);
     }
   };
   
@@ -114,7 +197,36 @@ function HashTable() {
     setSelectedHashes([hash]);
     setActiveTab('attack');
   };
-  
+
+  const handleGenerateTestHash = () => {
+    if (!database) return;
+
+    // Hashcat official example hash for mode 22000 (EAPOL type, password: "hashcat!")
+    const testHashLine = 'WPA*02*59168bc19a6327436b6a7b2d2d6ad243*fc690c158264*accd10fb464e*686173686361742d6573736964*3d110a03731255fb22b8f41ea1632543e8a39e5e1d73e0d7e5b546acb3ed8308*0103007502010a0000000000000000000142f6f740e1e54213031c1e9032934ee4f25b64c0d4c12e3f587a48029170470000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018dd160050f20101000050f20201000050f20201000050f2*02';
+
+    try {
+      const created = addHash(database, {
+        source: 'hash',
+        hashLine: testHashLine,
+        ssid: 'hashcat-essid',
+        password: '',
+        markAsCracked: false
+      });
+
+      if (created) {
+        refreshDatabase();
+        setAddSuccess(t('table.testHashGenerated'));
+      }
+    } catch (error) {
+      const msg = error?.message || '';
+      if (msg.includes('duplicate')) {
+        setAddSuccess(t('table.testHashGenerated'));
+      } else {
+        setAddError(resolveMessage(msg, 'table.addHashValidation.generic'));
+      }
+    }
+  };
+
   const getStatusBadge = (status) => {
     return STATUS_META[status]?.badge || 'badge-info';
   };
@@ -214,9 +326,14 @@ function HashTable() {
         <div className="toolbar-right">
           <button
             className="btn btn-secondary"
+            onClick={handleGenerateTestHash}
+            title={t('table.testHashTooltip')}
+          >
+            <Zap size={18} /> {t('table.generateTestHash')}
+          </button>
+          <button
+            className="btn btn-secondary"
             onClick={handleAddHash}
-            disabled
-            title={t('table.realOnlyAddDisabled')}
           >
             <Plus size={18} /> {t('table.addHash')}
           </button>
@@ -227,6 +344,16 @@ function HashTable() {
           )}
         </div>
       </div>
+
+      {addSuccess && (
+        <div className="table-notice success">
+          <CheckCircle2 size={16} />
+          <span>{addSuccess}</span>
+          <button className="btn-icon" onClick={() => setAddSuccess('')} title={t('table.delete')}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       <div className="status-strip">
         <button
@@ -357,7 +484,165 @@ function HashTable() {
           <span className="text-muted text-sm">{t('table.performanceNotice')}</span>
         )}
       </div>
-      
+
+      {/* Add Hash Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeAddModal}
+          >
+            <motion.form
+              className="modal glass-card"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+              onSubmit={handleSubmitAddHash}
+            >
+              <div className="modal-header">
+                <h3>{t('table.addHashModalTitle')}</h3>
+                <button type="button" className="btn-ghost" onClick={closeAddModal}>×</button>
+              </div>
+
+              <div className="modal-content add-hash-content">
+                <div className="form-field">
+                  <label>{t('table.addHashMode')}</label>
+                  <div className="mode-toggle">
+                    <button
+                      type="button"
+                      className={`mode-option ${addForm.source === 'word' ? 'active' : ''}`}
+                      onClick={() => handleAddFormChange('source', 'word')}
+                    >
+                      {t('table.addHashFromWord')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`mode-option ${addForm.source === 'hash' ? 'active' : ''}`}
+                      onClick={() => handleAddFormChange('source', 'hash')}
+                    >
+                      {t('table.addHashFromHash')}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label>{t('table.ssid')}</label>
+                    <input
+                      className="input"
+                      value={addForm.ssid}
+                      onChange={(event) => handleAddFormChange('ssid', event.target.value)}
+                      placeholder={t('table.addHashSsidPlaceholder')}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>{t('table.bssid')}</label>
+                    <input
+                      className="input input-mono"
+                      value={addForm.bssid}
+                      onChange={(event) => handleAddFormChange('bssid', event.target.value)}
+                      placeholder={t('table.addHashBssidPlaceholder')}
+                    />
+                  </div>
+                </div>
+
+                {addForm.source === 'word' ? (
+                  <>
+                    <div className="form-grid">
+                      <div className="form-field">
+                        <label>{t('table.type')}</label>
+                        <select
+                          className="select"
+                          value={addForm.type}
+                          onChange={(event) => handleAddFormChange('type', event.target.value)}
+                        >
+                          <option value="PMKID">PMKID</option>
+                          <option value="EAPOL">EAPOL</option>
+                        </select>
+                      </div>
+                      <div className="form-field">
+                        <label>{t('table.clientMac')}</label>
+                        <input
+                          className="input input-mono"
+                          value={addForm.client}
+                          onChange={(event) => handleAddFormChange('client', event.target.value)}
+                          placeholder={t('table.addHashClientPlaceholder')}
+                        />
+                      </div>
+                    </div>
+                    <div className="form-field">
+                      <label>{t('table.addHashWord')}</label>
+                      <input
+                        className="input"
+                        value={addForm.word}
+                        onChange={(event) => handleAddFormChange('word', event.target.value)}
+                        placeholder={t('table.addHashWordPlaceholder')}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="form-field">
+                      <label>{t('table.addHashRaw')}</label>
+                      <textarea
+                        className="input input-mono textarea-input"
+                        value={addForm.hashLine}
+                        onChange={(event) => handleAddFormChange('hashLine', event.target.value)}
+                        placeholder={t('table.addHashRawPlaceholder')}
+                        rows={5}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>{t('table.addHashOptionalPassword')}</label>
+                      <input
+                        className="input"
+                        value={addForm.password}
+                        onChange={(event) => handleAddFormChange('password', event.target.value)}
+                        placeholder={t('table.addHashWordPlaceholder')}
+                      />
+                    </div>
+                    <div className="input-hints">
+                      <p>{t('table.supportedFormatsTitle')}</p>
+                      <ul className="hint-list">
+                        <li>{t('table.supportedFormat1')}</li>
+                        <li>{t('table.supportedFormat2')}</li>
+                        <li>{t('table.supportedFormat3')}</li>
+                        <li>{t('table.supportedFormat4')}</li>
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={addForm.markAsCracked}
+                    onChange={(event) => handleAddFormChange('markAsCracked', event.target.checked)}
+                  />
+                  <span>{t('table.addHashMarkCracked')}</span>
+                </label>
+                <p className="form-help">{t('table.addHashMarkCrackedHint')}</p>
+
+                {addError && <p className="form-error">{addError}</p>}
+
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-secondary" onClick={closeAddModal}>
+                    {t('table.cancel')}
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={isAdding}>
+                    <Plus size={16} /> {t('table.addHashCreate')}
+                  </button>
+                </div>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hash Details Modal */}
       <AnimatePresence>
         {viewHash && (

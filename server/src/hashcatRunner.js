@@ -46,11 +46,12 @@ function calculateProgress(statusJson) {
   };
 }
 
-export async function startDictionaryAttack({
+async function runHashcat({
   jobId,
   hashLine,
   hashMode = 22000,
-  wordlistPath = DEFAULT_WORDLIST_PATH,
+  attackModeFlag,
+  trailingArgs,
   onStatus,
   onLog,
   onFinish
@@ -67,7 +68,7 @@ export async function startDictionaryAttack({
     '-m',
     String(hashMode),
     '-a',
-    '0',
+    attackModeFlag,
     '-w',
     HASHCAT_WORKLOAD_PROFILE,
     '--status',
@@ -81,7 +82,7 @@ export async function startDictionaryAttack({
     '--outfile-format',
     '2',
     hashFilePath,
-    wordlistPath
+    ...trailingArgs
   ];
 
   const spawnCommand = isCpuLimitEnabled() ? CPU_LIMIT_BIN : HASHCAT_BIN;
@@ -100,7 +101,6 @@ export async function startDictionaryAttack({
     candidatesTested: 0,
     candidatesTotal: 0,
     speed: 0,
-    wordlistPath,
     resourceLimits: {
       cpuPercent: isCpuLimitEnabled() ? HASHCAT_CPU_LIMIT_PERCENT : null,
       workloadProfile: HASHCAT_WORKLOAD_PROFILE,
@@ -206,4 +206,68 @@ export async function startDictionaryAttack({
       }
     }
   };
+}
+
+export async function startDictionaryAttack({
+  jobId,
+  hashLine,
+  hashMode = 22000,
+  wordlistPath = DEFAULT_WORDLIST_PATH,
+  onStatus,
+  onLog,
+  onFinish
+}) {
+  return runHashcat({
+    jobId,
+    hashLine,
+    hashMode,
+    attackModeFlag: '0',
+    trailingArgs: [wordlistPath],
+    onStatus,
+    onLog,
+    onFinish
+  });
+}
+
+export async function startBruteforceAttack({
+  jobId,
+  hashLine,
+  hashMode = 22000,
+  mask,
+  onStatus,
+  onLog,
+  onFinish
+}) {
+  return runHashcat({
+    jobId,
+    hashLine,
+    hashMode,
+    attackModeFlag: '3',
+    trailingArgs: [mask],
+    onStatus,
+    onLog,
+    onFinish
+  });
+}
+
+export async function startHybridAttack({
+  jobId,
+  hashLine,
+  hashMode = 22000,
+  wordlistPath = DEFAULT_WORDLIST_PATH,
+  mask,
+  onStatus,
+  onLog,
+  onFinish
+}) {
+  return runHashcat({
+    jobId,
+    hashLine,
+    hashMode,
+    attackModeFlag: '6',
+    trailingArgs: [wordlistPath, mask],
+    onStatus,
+    onLog,
+    onFinish
+  });
 }

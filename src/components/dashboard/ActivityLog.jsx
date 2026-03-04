@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle, Info, Terminal, XCircle } from 'lucide-reac
 import { useEffect, useMemo, useRef } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { WORDLISTS } from '../../services/hashcat/simulator';
+import { WORDLISTS } from '../../services/hashcat/constants';
 import './ActivityLog.css';
 
 function ActivityLog({ showHeader = true }) {

@@ -59,6 +59,9 @@
     "actions": "Amallar",
     "addHash": "Heş Goş",
     "realOnlyAddDisabled": "Hakyky backend režiminde diňe import edilen hakyky hashlar rugsat berilýär.",
+    "generateTestHash": "Synag Hash Döret",
+    "testHashTooltip": "Hashcat gurnamasynyň işleýändigini barlamak üçin bilinen açylýan hc22000 hash goşuň (parol: hashcat!).",
+    "testHashGenerated": "Synag hash goşuldy (SSID: hashcat-essid). Açmak üçin sözlük hüjümini ulanyň — parol rockyou.txt-de bar.",
     "delete": "Poz",
     "viewDetails": "Jikme-jigi Gör",
     "attack": "Hüjüm",
@@ -91,13 +94,9 @@
     "live": "GÖNI"
   },
   "attack": {
-    "simulationBanner": {
-      "title": "Simulýasiýa Režimi",
-      "message": "- Serwerde WiFi skaneri elýeterli däl. Okuw görkezmesi üçin simulirlenen torlary döretmekde \"Generate\" ulanyň."
-    },
-    "realBanner": {
-      "title": "Hakyky Hashcat Režimi",
-      "message": "işjeň. Sözlük hüjümleri backend hashcat arkaly işleýär. Brute-force we hybrid režimler backend goldawy bolýança simulýatorda galýar."
+    "backendBanner": {
+      "title": "Hashcat Backend",
+      "message": "— Ähli hüjümler (sözlük, brute-force, gibrid) hakyky hashcat arkaly işleýär. Başlamak üçin hc22000 hash import ediň ýa-da 'Synag Hash Döret' ulanyň."
     },
     "targetHash": "Maksat Heş",
     "scanRealNetworks": "Hakyky torlary skanerle",
@@ -107,7 +106,6 @@
     "importSuccess": "{{count}} sany hakyky hash import edildi.",
     "importNoValidHashes": "Saýlanan faýlda dogry hc22000 hash tapylmady.",
     "importFailed": "Hash faýly import edilip bilinmedi.",
-    "realBackendDictionaryOnly": "Hakyky backend diňe sözlük hüjümini goldaýar.",
     "scan": "Skanerle",
     "generate": "Döret",
     "scanning": "Skanerlenýär...",
@@ -209,8 +207,7 @@
       "attackPaused": "Hüjüm saklandy",
       "attackResumed": "Hüjüm dowam etdi",
       "attackStopped": "Hüjüm ulanyjy tarapyndan duruzyldy",
-      "invalidRealHash": "Hakyky hashcat başladylyp bilinmedi: saýlanan maksat hash hc22000 formatynda däl.",
-      "realBackendDictionaryOnly": "Hakyky hashcat başladylyp bilinmedi: diňe sözlük režimi goldanýar."
+      "invalidRealHash": "Hakyky hashcat başladylyp bilinmedi: saýlanan maksat hash hc22000 formatynda däl."
     }
   },
   "results": {
@@ -357,7 +354,6 @@
     "keyspaceWordlistExhausted": "Açar giňişligi/wordlist gutardy",
     "stoppedByUser": "Ulanyjy tarapyndan duruzyldy",
     "invalidRealHash": "Saýlanan hash hakyky backend üçin dogry hc22000 formatynda däl.",
-    "realBackendDictionaryOnly": "Hakyky backend diňe sözlük hüjümini goldaýar.",
     "hashcatFailed": "Hashcat başladylyp bilmedi ýa-da ýalňyşlyk bilen çykdy."
   }
 }

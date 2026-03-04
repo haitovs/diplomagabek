@@ -21,10 +21,6 @@ function buildUrl(path) {
 }
 
 async function request(path, options = {}) {
-  if (!HASHCAT_API_BASE) {
-    throw new Error('Real hashcat backend URL is not configured. Set VITE_HASHCAT_BACKEND_URL (example: /api or http://localhost:8080).');
-  }
-
   const response = await fetch(buildUrl(path), {
     headers: {
       'Content-Type': 'application/json',
@@ -41,10 +37,6 @@ async function request(path, options = {}) {
   return response.json();
 }
 
-export function isRealHashcatEnabled() {
-  return Boolean(HASHCAT_API_BASE);
-}
-
 export async function createDictionaryJob({ hashId, hash, hashMode = 22000, wordlistKey }) {
   return request('/jobs', {
     method: 'POST',
@@ -53,6 +45,33 @@ export async function createDictionaryJob({ hashId, hash, hashMode = 22000, word
       hash,
       hashMode,
       attackMode: 'dictionary',
+      ...(wordlistKey ? { wordlistKey } : {})
+    })
+  });
+}
+
+export async function createBruteforceJob({ hashId, hash, hashMode = 22000, mask }) {
+  return request('/jobs', {
+    method: 'POST',
+    body: JSON.stringify({
+      hashId,
+      hash,
+      hashMode,
+      attackMode: 'bruteforce',
+      mask
+    })
+  });
+}
+
+export async function createHybridJob({ hashId, hash, hashMode = 22000, wordlistKey, mask }) {
+  return request('/jobs', {
+    method: 'POST',
+    body: JSON.stringify({
+      hashId,
+      hash,
+      hashMode,
+      attackMode: 'hybrid',
+      mask,
       ...(wordlistKey ? { wordlistKey } : {})
     })
   });

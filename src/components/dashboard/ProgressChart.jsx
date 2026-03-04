@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { formatNumber, formatSpeed, formatTime } from '../../services/hashcat/simulator';
+import { formatNumber, formatSpeed, formatTime } from '../../services/hashcat/constants';
 import './ProgressChart.css';
 
 const MIN_POINT_INTERVAL_MS = 250;

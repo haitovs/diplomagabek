@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { startDictionaryAttack } from './hashcatRunner.js';
+import { startBruteforceAttack, startDictionaryAttack, startHybridAttack } from './hashcatRunner.js';
 import { buildMask, identifyHashType, scorePassword } from './securityTools.js';
 
 const PORT = Number(process.env.PORT || 8080);
@@ -136,13 +136,15 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.post('/api/jobs', async (req, res) => {
+  const VALID_ATTACK_MODES = ['dictionary', 'bruteforce', 'hybrid'];
   const {
     hashId,
     hash,
     hashMode = 22000,
     attackMode = 'dictionary',
     wordlistKey,
-    wordlistPath
+    wordlistPath,
+    mask
   } = req.body || {};
 
   const normalizedHash = typeof hash === 'string' ? hash.trim() : '';
@@ -163,18 +165,30 @@ app.post('/api/jobs', async (req, res) => {
     });
   }
 
-  if (attackMode !== 'dictionary') {
+  if (!VALID_ATTACK_MODES.includes(attackMode)) {
     return res.status(400).json({
-      message: 'Real backend currently supports dictionary attacks only.'
+      message: `Invalid attackMode. Must be one of: ${VALID_ATTACK_MODES.join(', ')}`
     });
   }
 
-  const wordlistResolution = await resolveExistingWordlist({ wordlistKey, wordlistPath });
-  const resolvedWordlistPath = wordlistResolution.resolvedPath;
-  if (!resolvedWordlistPath) {
+  if ((attackMode === 'bruteforce' || attackMode === 'hybrid') && !mask) {
     return res.status(400).json({
-      message: `Wordlist not found: ${wordlistResolution.requestedPath}`
+      message: 'mask is required for bruteforce and hybrid attacks.'
     });
+  }
+
+  // Resolve wordlist for dictionary and hybrid modes
+  let resolvedWordlistPath = null;
+  let wordlistResolution = { requestedPath: null, resolvedPath: null, fallbackUsed: false };
+
+  if (attackMode === 'dictionary' || attackMode === 'hybrid') {
+    wordlistResolution = await resolveExistingWordlist({ wordlistKey, wordlistPath });
+    resolvedWordlistPath = wordlistResolution.resolvedPath;
+    if (!resolvedWordlistPath) {
+      return res.status(400).json({
+        message: `Wordlist not found: ${wordlistResolution.requestedPath}`
+      });
+    }
   }
 
   const jobId = randomUUID();
@@ -187,6 +201,7 @@ app.post('/api/jobs', async (req, res) => {
     attackMode,
     wordlistPath: resolvedWordlistPath,
     wordlistKey: wordlistKey || null,
+    mask: mask || null,
     requestedWordlistPath: wordlistResolution.requestedPath,
     fallbackWordlistUsed: wordlistResolution.fallbackUsed,
     status: 'pending',
@@ -202,28 +217,39 @@ app.post('/api/jobs', async (req, res) => {
     finishedAt: null
   });
 
-  const controller = await startDictionaryAttack({
+  const finishHandler = (patch) => {
+    updateJob(jobId, {
+      ...patch,
+      finishedAt: new Date().toISOString()
+    });
+    controllers.delete(jobId);
+  };
+
+  const commonOpts = {
     jobId,
     hashLine: normalizedHash,
     hashMode,
-    wordlistPath: resolvedWordlistPath,
     onStatus: (patch) => updateJob(jobId, patch),
     onLog: (entry) => appendJobLog(jobId, entry),
-    onFinish: (patch) => {
-      updateJob(jobId, {
-        ...patch,
-        finishedAt: new Date().toISOString()
-      });
-      controllers.delete(jobId);
-    }
-  });
+    onFinish: finishHandler
+  };
+
+  let controller;
+
+  if (attackMode === 'bruteforce') {
+    controller = await startBruteforceAttack({ ...commonOpts, mask });
+  } else if (attackMode === 'hybrid') {
+    controller = await startHybridAttack({ ...commonOpts, wordlistPath: resolvedWordlistPath, mask });
+  } else {
+    controller = await startDictionaryAttack({ ...commonOpts, wordlistPath: resolvedWordlistPath });
+  }
 
   controllers.set(jobId, controller);
 
   return res.status(202).json({
     jobId,
     statusUrl: `/api/jobs/${jobId}`,
-    wordlistPath: resolvedWordlistPath,
+    ...(resolvedWordlistPath ? { wordlistPath: resolvedWordlistPath } : {}),
     fallbackWordlistUsed: wordlistResolution.fallbackUsed
   });
 });
