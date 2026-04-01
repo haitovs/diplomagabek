@@ -131,6 +131,14 @@
     "scanRealNetworks": "Hakyky torlary skanerle",
     "generateSimulatedNetworks": "Simulirlenen torlary döred",
     "realOnlyImportHint": "Diňe hakyky režim: ygtybarly çeşmeden capture edilen hc22000 hash import ediň.",
+    "quickHash": {
+      "title": "Çalt Heş Dörediji",
+      "description": "Hakyky açylýan WPA heşini döretmek üçin parol ýazyň, soňra hüjüm ediň.",
+      "ssidPlaceholder": "Tor ady",
+      "passwordPlaceholder": "Heşlemek üçin parol ýazyň...",
+      "create": "Heş Döret we Maksat Hökmünde Saýla",
+      "generating": "Döredilýär..."
+    },
     "importOnly": "Diňe Import",
     "importSuccess": "{{count}} sany hakyky hash import edildi.",
     "importNoValidHashes": "Saýlanan faýlda dogry hc22000 hash tapylmady.",

@@ -131,6 +131,14 @@
     "scanRealNetworks": "Scan for real networks",
     "generateSimulatedNetworks": "Generate simulated networks",
     "realOnlyImportHint": "Real-only mode: import captured hc22000 hashes from trusted source.",
+    "quickHash": {
+      "title": "Quick Hash Creator",
+      "description": "Type a password to generate a real crackable WPA hash, then attack it.",
+      "ssidPlaceholder": "Network name",
+      "passwordPlaceholder": "Enter password to hash...",
+      "create": "Create Hash & Select as Target",
+      "generating": "Generating..."
+    },
     "importOnly": "Import Only",
     "importSuccess": "Imported {{count}} real hash(es).",
     "importNoValidHashes": "No valid hc22000 hashes were found in the selected file.",

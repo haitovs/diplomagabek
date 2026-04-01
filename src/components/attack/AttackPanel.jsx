@@ -13,10 +13,10 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { importHashes, importRealNetworks } from '../../services/database/hashDB';
+import { addHash, importHashes, importRealNetworks } from '../../services/database/hashDB';
 import {
   PRESET_MASKS,
   WORDLISTS,
@@ -48,6 +48,9 @@ function AttackPanel() {
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [quickPassword, setQuickPassword] = useState('');
+  const [quickSsid, setQuickSsid] = useState('TestWiFi');
+  const [isGenerating, setIsGenerating] = useState(false);
   const importInputRef = useRef(null);
   const isElectron = !!window.electronAPI;
   const isHc22000Hash = (value) => typeof value === 'string' && /^WPA\*(01|02)\*/i.test(value.trim());
@@ -57,6 +60,70 @@ function AttackPanel() {
       setTargetHash(selectedHashes[0]);
     }
   }, [selectedHashes]);
+
+  const generatePmkidHash = useCallback(async (password, ssid) => {
+    const enc = new TextEncoder();
+    const macAP = 'aabbccddeeff';
+    const macSTA = '112233445566';
+
+    // PMK = PBKDF2(SHA1, password, ssid, 4096, 256-bit)
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
+    );
+    const pmkBits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt: enc.encode(ssid), iterations: 4096, hash: 'SHA-1' },
+      keyMaterial, 256
+    );
+    const pmk = new Uint8Array(pmkBits);
+
+    // PMKID = HMAC-SHA1(PMK, "PMK Name" + MAC_AP + MAC_STA)[:16]
+    const hmacKey = await crypto.subtle.importKey(
+      'raw', pmk, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+    );
+    const macAPBytes = new Uint8Array(macAP.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const macSTABytes = new Uint8Array(macSTA.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const dataToSign = new Uint8Array([...enc.encode('PMK Name'), ...macAPBytes, ...macSTABytes]);
+    const sig = await crypto.subtle.sign('HMAC', hmacKey, dataToSign);
+    const pmkid = Array.from(new Uint8Array(sig).subarray(0, 16))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const ssidHex = Array.from(enc.encode(ssid))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return `WPA*01*${pmkid}*${macAP}*${macSTA}*${ssidHex}***`;
+  }, []);
+
+  const handleQuickHash = useCallback(async () => {
+    if (!quickPassword.trim() || !quickSsid.trim() || !database) return;
+    setIsGenerating(true);
+    try {
+      const hashLine = await generatePmkidHash(quickPassword.trim(), quickSsid.trim());
+      const created = addHash(database, {
+        source: 'hash',
+        hashLine,
+        ssid: quickSsid.trim(),
+        password: '',
+        markAsCracked: false
+      });
+      if (created) {
+        refreshDatabase();
+        setTargetHash(created);
+        setSelectedHashes([created]);
+        setQuickPassword('');
+      }
+    } catch (error) {
+      const msg = error?.message || '';
+      if (msg.includes('duplicate')) {
+        const existing = database.hashes.find(h => h.ssid === quickSsid.trim() && h.status === 'pending');
+        if (existing) {
+          setTargetHash(existing);
+          setSelectedHashes([existing]);
+        }
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [quickPassword, quickSsid, database, generatePmkidHash, refreshDatabase, setSelectedHashes]);
 
   const pendingHashes = useMemo(
     () => database?.hashes?.filter((hash) => hash.status === 'pending') || [],
@@ -307,6 +374,51 @@ function AttackPanel() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              background: 'rgba(139, 92, 246, 0.08)',
+              border: '1px solid rgba(139, 92, 246, 0.25)',
+              borderRadius: '8px'
+            }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', display: 'block' }}>
+                {t('attack.quickHash.title')}
+              </label>
+              <p className="config-desc" style={{ margin: '0 0 8px 0' }}>
+                {t('attack.quickHash.description')}
+              </p>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="text"
+                  className="input"
+                  value={quickSsid}
+                  onChange={(e) => setQuickSsid(e.target.value)}
+                  placeholder={t('attack.quickHash.ssidPlaceholder')}
+                  disabled={isActive || isGenerating}
+                  style={{ flex: '0 0 140px' }}
+                />
+                <input
+                  type="text"
+                  className="input"
+                  value={quickPassword}
+                  onChange={(e) => setQuickPassword(e.target.value)}
+                  placeholder={t('attack.quickHash.passwordPlaceholder')}
+                  disabled={isActive || isGenerating}
+                  style={{ flex: 1 }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleQuickHash()}
+                />
+              </div>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={handleQuickHash}
+                disabled={isActive || isGenerating || !quickPassword.trim()}
+                style={{ width: '100%' }}
+              >
+                <Zap size={14} />
+                {isGenerating ? ` ${t('attack.quickHash.generating')}` : ` ${t('attack.quickHash.create')}`}
+              </button>
             </div>
 
             {importStatus && (
