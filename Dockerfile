@@ -19,6 +19,8 @@ RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y --no-ins
     gzip \
     hashcat \
     nginx \
+    ocl-icd-libopencl1 \
+    pocl-opencl-icd \
     p7zip-full \
   && rm -rf /var/lib/apt/lists/*
 
