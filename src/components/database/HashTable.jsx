@@ -165,8 +165,11 @@ function HashTable() {
         const password = (addForm.word || '').trim();
         if (!password) throw new Error('table.addHashValidation.wordRequired');
 
-        const ssid = (addForm.ssid || '').trim() || `Network_${database.hashes.length + 1}`;
-        const hashLine = await generateValidPmkidHash(password, ssid);
+        const ssid = (addForm.ssid || '').trim() || `WiFi_${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        const randomMac = () => Array.from({ length: 6 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('');
+        const macAP = randomMac();
+        const macSTA = randomMac();
+        const hashLine = await generateValidPmkidHash(password, ssid, macAP, macSTA);
 
         const created = addHash(database, {
           source: 'hash',

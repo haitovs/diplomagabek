@@ -94,8 +94,8 @@ function AttackPanel() {
     }
   }, [quickPassword, quickSsid, database, refreshDatabase, setSelectedHashes]);
 
-  const pendingHashes = useMemo(
-    () => database?.hashes?.filter((hash) => hash.status === 'pending') || [],
+  const attackableHashes = useMemo(
+    () => database?.hashes?.filter((hash) => hash.status === 'pending' || hash.status === 'failed') || [],
     [database]
   );
 
@@ -337,7 +337,7 @@ function AttackPanel() {
                 disabled={isActive}
               >
                 <option value="">{t('attack.selectHashPlaceholder')}</option>
-                {pendingHashes.map((hash) => (
+                {attackableHashes.map((hash) => (
                   <option key={hash.id} value={hash.id}>
                     {hash.category === 'real_scan' ? `📡 ${t('attack.realPrefix')} ` : ''}{hash.ssid} ({hash.type})
                   </option>
