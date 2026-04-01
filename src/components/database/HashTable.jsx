@@ -561,50 +561,16 @@ function HashTable() {
                   </div>
                 </div>
 
-                <div className="form-grid">
-                  <div className="form-field">
-                    <label>{t('table.ssid')}</label>
-                    <input
-                      className="input"
-                      value={addForm.ssid}
-                      onChange={(event) => handleAddFormChange('ssid', event.target.value)}
-                      placeholder={t('table.addHashSsidPlaceholder')}
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label>{t('table.bssid')}</label>
-                    <input
-                      className="input input-mono"
-                      value={addForm.bssid}
-                      onChange={(event) => handleAddFormChange('bssid', event.target.value)}
-                      placeholder={t('table.addHashBssidPlaceholder')}
-                    />
-                  </div>
-                </div>
-
                 {addForm.source === 'word' ? (
                   <>
-                    <div className="form-grid">
-                      <div className="form-field">
-                        <label>{t('table.type')}</label>
-                        <select
-                          className="select"
-                          value={addForm.type}
-                          onChange={(event) => handleAddFormChange('type', event.target.value)}
-                        >
-                          <option value="PMKID">PMKID</option>
-                          <option value="EAPOL">EAPOL</option>
-                        </select>
-                      </div>
-                      <div className="form-field">
-                        <label>{t('table.clientMac')}</label>
-                        <input
-                          className="input input-mono"
-                          value={addForm.client}
-                          onChange={(event) => handleAddFormChange('client', event.target.value)}
-                          placeholder={t('table.addHashClientPlaceholder')}
-                        />
-                      </div>
+                    <div className="form-field">
+                      <label>{t('table.ssid')}</label>
+                      <input
+                        className="input"
+                        value={addForm.ssid}
+                        onChange={(event) => handleAddFormChange('ssid', event.target.value)}
+                        placeholder={t('table.addHashSsidPlaceholder')}
+                      />
                     </div>
                     <div className="form-field">
                       <label>{t('table.addHashWord')}</label>
@@ -615,9 +581,30 @@ function HashTable() {
                         placeholder={t('table.addHashWordPlaceholder')}
                       />
                     </div>
+                    <p className="form-help">{t('table.addHashAutoGenHint')}</p>
                   </>
                 ) : (
                   <>
+                    <div className="form-grid">
+                      <div className="form-field">
+                        <label>{t('table.ssid')}</label>
+                        <input
+                          className="input"
+                          value={addForm.ssid}
+                          onChange={(event) => handleAddFormChange('ssid', event.target.value)}
+                          placeholder={t('table.addHashSsidPlaceholder')}
+                        />
+                      </div>
+                      <div className="form-field">
+                        <label>{t('table.bssid')}</label>
+                        <input
+                          className="input input-mono"
+                          value={addForm.bssid}
+                          onChange={(event) => handleAddFormChange('bssid', event.target.value)}
+                          placeholder={t('table.addHashBssidPlaceholder')}
+                        />
+                      </div>
+                    </div>
                     <div className="form-field">
                       <label>{t('table.addHashRaw')}</label>
                       <textarea

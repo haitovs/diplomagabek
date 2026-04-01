@@ -90,6 +90,7 @@
     "addHashMarkCracked": "Mark as already cracked",
     "addHashMarkCrackedHint": "Check this if the password is already known and you want to import it as a cracked result.",
     "addHashCreate": "Add Hash",
+    "addHashAutoGenHint": "BSSID, MAC, and hash are generated automatically. Just enter SSID and password.",
     "addHashCreated": "Hash added successfully.",
     "addHashValidation": {
       "generic": "Failed to add hash.",

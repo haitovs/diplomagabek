@@ -90,6 +90,7 @@
     "addHashMarkCracked": "Eýýäm açylan hökmünde belle",
     "addHashMarkCrackedHint": "Parol eýýäm belli bolsa we açylan netije hökmünde import etmek isleseňiz, belläň.",
     "addHashCreate": "Heş Goş",
+    "addHashAutoGenHint": "BSSID, MAC we heş awtomatiki döredilýär. Diňe SSID we parol giriziň.",
     "addHashCreated": "Heş üstünlikli goşuldy.",
     "addHashValidation": {
       "generic": "Heşi goşup bolmady.",
