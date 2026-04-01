@@ -65,6 +65,7 @@ async function runHashcat({
   await fs.writeFile(hashFilePath, `${hashLine.trim()}\n`, 'utf8');
 
   const args = [
+    '--session', jobId,
     '-m',
     String(hashMode),
     '-a',
