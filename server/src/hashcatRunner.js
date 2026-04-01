@@ -77,7 +77,6 @@ async function runHashcat({
     '--status-json',
     '--status-timer',
     '2',
-    '--machine-readable',
     '--outfile-autohex-disable',
     '--outfile',
     outputFilePath,
