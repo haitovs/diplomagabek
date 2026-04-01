@@ -24,8 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ── Frontend: copy built assets + nginx config ───────────
 COPY --from=build /app/dist /usr/share/nginx/html
-RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf
-COPY nginx.unified.conf /etc/nginx/conf.d/app.conf
+COPY nginx.unified.conf /etc/nginx/nginx.conf
 
 # ── Backend: install server dependencies ─────────────────
 WORKDIR /srv/app
