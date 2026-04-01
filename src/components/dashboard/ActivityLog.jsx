@@ -54,10 +54,13 @@ function ActivityLog({ showHeader = true }) {
 
       const message = log.key
         ? t(log.key, params)
-        : (log.message || t('activity.unknownEntry'));
+        : (log.message || log.line || t('activity.unknownEntry'));
+
+      const type = log.type || (log.stream === 'stderr' ? 'warning' : 'info');
 
       return {
         ...log,
+        type,
         message,
         rowKey: log.id || `${log.timestamp || 'na'}-${log.key || log.message || index}-${index}`
       };
