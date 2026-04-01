@@ -61,7 +61,7 @@
     "realOnlyAddDisabled": "Hakyky backend režiminde diňe import edilen hakyky hashlar rugsat berilýär.",
     "generateTestHash": "Synag Hash Döret",
     "testHashTooltip": "Hashcat gurnamasynyň işleýändigini barlamak üçin bilinen açylýan hc22000 hash goşuň (parol: hashcat!).",
-    "testHashGenerated": "Synag hash goşuldy (SSID: hashcat-essid). Açmak üçin sözlük hüjümini ulanyň — parol rockyou.txt-de bar.",
+    "testHashGenerated": "{{count}} synag heş(ler) goşuldy. Açmak üçin rockyou.txt bilen sözlük hüjümini ulanyň.",
     "delete": "Poz",
     "viewDetails": "Jikme-jigi Gör",
     "attack": "Hüjüm",

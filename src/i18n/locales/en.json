@@ -61,7 +61,7 @@
     "realOnlyAddDisabled": "Real backend mode allows only imported real hashes.",
     "generateTestHash": "Generate Test Hash",
     "testHashTooltip": "Insert a known-crackable hc22000 hash (password: hashcat!) to verify your hashcat setup works.",
-    "testHashGenerated": "Test hash added (SSID: hashcat-essid). Use a dictionary attack to crack it — the password is in rockyou.txt.",
+    "testHashGenerated": "{{count}} test hash(es) added. Use a dictionary attack with rockyou.txt to crack them.",
     "delete": "Delete",
     "viewDetails": "View Details",
     "attack": "Attack",
