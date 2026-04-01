@@ -308,6 +308,15 @@
       "addNumbers": "Add numbers.",
       "addSymbols": "Add special symbols.",
       "avoidCommonPatterns": "Avoid common patterns."
+    },
+    "guide": {
+      "tryExamples": "Quick Test — click to try",
+      "hashDescription": "Paste any hash to identify its type and hashcat mode number. Click an example below to test instantly.",
+      "passwordDescription": "Analyzes password strength by checking length, character variety, and common patterns. Try these examples:",
+      "maskDescription": "Build a hashcat brute-force mask by specifying character types. The mask defines what characters hashcat tries at each position.",
+      "maskAllLower": "8 lowercase",
+      "maskAllDigits": "8 digits (PIN)",
+      "maskMixed": "Mixed (Aa1!)"
     }
   },
   "wordlists": {

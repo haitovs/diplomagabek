@@ -308,6 +308,15 @@
       "addNumbers": "San goşuň.",
       "addSymbols": "Ýörite nyşan goşuň.",
       "avoidCommonPatterns": "Gaty umumy patternlerden gaça duruň."
+    },
+    "guide": {
+      "tryExamples": "Çalt Synag — basmak bilen synap görüň",
+      "hashDescription": "Heşiň görnüşini we hashcat režim belgisini kesgitlemek üçin islendik heşi goýuň. Derrew synap görmek üçin aşakdaky mysala basyň.",
+      "passwordDescription": "Parolyň güýjüni uzynlyk, simwol dürlüligi we umumy patternler boýunça seljeriň. Şu mysallary synap görüň:",
+      "maskDescription": "Simwol görnüşlerini belläp, hashcat brute-force maskasyny guruň. Maska hashcat-yň her pozisiýada haýsy simwollary synajagyny kesgitleýär.",
+      "maskAllLower": "8 kiçi harp",
+      "maskAllDigits": "8 san (PIN)",
+      "maskMixed": "Garyşyk (Aa1!)"
     }
   },
   "wordlists": {
