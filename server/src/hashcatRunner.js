@@ -172,8 +172,8 @@ async function runHashcat({
       const outputData = await fs.readFile(outputFilePath, 'utf8');
       const firstLine = outputData.split('\n').find(Boolean);
       if (firstLine) {
-        const passwordSegment = firstLine.split(':').slice(1).join(':');
-        crackedPassword = passwordSegment || null;
+        // --outfile-format 2 outputs plain password only (no hash prefix)
+        crackedPassword = firstLine.trim() || null;
       }
     } catch {
       // No cracked output file means no recovered password.

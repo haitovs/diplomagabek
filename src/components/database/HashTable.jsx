@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
 import { addHash, deleteHash, filterHashes, searchHashes, sortHashes } from '../../services/database/hashDB';
+import { generateValidPmkidHash } from '../../services/hashcat/pmkid';
 import './HashTable.css';
 
 const STATUS_META = {
@@ -138,7 +139,7 @@ function HashTable() {
     return translated !== value ? translated : value;
   };
 
-  const handleSubmitAddHash = (event) => {
+  const handleSubmitAddHash = async (event) => {
     event.preventDefault();
     if (!database || isAdding) {
       return;
@@ -148,8 +149,8 @@ function HashTable() {
     setAddError('');
 
     try {
-      const payload = addForm.source === 'hash'
-        ? {
+      if (addForm.source === 'hash') {
+        const created = addHash(database, {
           source: 'hash',
           hashLine: addForm.hashLine,
           ssid: addForm.ssid,
@@ -157,20 +158,24 @@ function HashTable() {
           client: addForm.client,
           password: addForm.password,
           markAsCracked: addForm.markAsCracked
-        }
-        : {
-          source: 'word',
-          word: addForm.word,
-          ssid: addForm.ssid,
-          bssid: addForm.bssid,
-          client: addForm.client,
-          type: addForm.type,
-          markAsCracked: addForm.markAsCracked
-        };
+        });
+        if (!created) throw new Error('table.addHashValidation.generic');
+      } else {
+        // Generate a real crackable PMKID hash from the password
+        const password = (addForm.word || '').trim();
+        if (!password) throw new Error('table.addHashValidation.wordRequired');
 
-      const created = addHash(database, payload);
-      if (!created) {
-        throw new Error('table.addHashValidation.generic');
+        const ssid = (addForm.ssid || '').trim() || `Network_${database.hashes.length + 1}`;
+        const hashLine = await generateValidPmkidHash(password, ssid);
+
+        const created = addHash(database, {
+          source: 'hash',
+          hashLine,
+          ssid,
+          password: addForm.markAsCracked ? password : '',
+          markAsCracked: addForm.markAsCracked
+        });
+        if (!created) throw new Error('table.addHashValidation.generic');
       }
 
       refreshDatabase();

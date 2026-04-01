@@ -17,6 +17,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
 import { addHash, importHashes, importRealNetworks } from '../../services/database/hashDB';
+import { generateValidPmkidHash } from '../../services/hashcat/pmkid';
 import {
   PRESET_MASKS,
   WORDLISTS,
@@ -61,43 +62,11 @@ function AttackPanel() {
     }
   }, [selectedHashes]);
 
-  const generatePmkidHash = useCallback(async (password, ssid) => {
-    const enc = new TextEncoder();
-    const macAP = 'aabbccddeeff';
-    const macSTA = '112233445566';
-
-    // PMK = PBKDF2(SHA1, password, ssid, 4096, 256-bit)
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
-    );
-    const pmkBits = await crypto.subtle.deriveBits(
-      { name: 'PBKDF2', salt: enc.encode(ssid), iterations: 4096, hash: 'SHA-1' },
-      keyMaterial, 256
-    );
-    const pmk = new Uint8Array(pmkBits);
-
-    // PMKID = HMAC-SHA1(PMK, "PMK Name" + MAC_AP + MAC_STA)[:16]
-    const hmacKey = await crypto.subtle.importKey(
-      'raw', pmk, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
-    );
-    const macAPBytes = new Uint8Array(macAP.match(/.{2}/g).map(b => parseInt(b, 16)));
-    const macSTABytes = new Uint8Array(macSTA.match(/.{2}/g).map(b => parseInt(b, 16)));
-    const dataToSign = new Uint8Array([...enc.encode('PMK Name'), ...macAPBytes, ...macSTABytes]);
-    const sig = await crypto.subtle.sign('HMAC', hmacKey, dataToSign);
-    const pmkid = Array.from(new Uint8Array(sig).subarray(0, 16))
-      .map(b => b.toString(16).padStart(2, '0')).join('');
-
-    const ssidHex = Array.from(enc.encode(ssid))
-      .map(b => b.toString(16).padStart(2, '0')).join('');
-
-    return `WPA*01*${pmkid}*${macAP}*${macSTA}*${ssidHex}***`;
-  }, []);
-
   const handleQuickHash = useCallback(async () => {
     if (!quickPassword.trim() || !quickSsid.trim() || !database) return;
     setIsGenerating(true);
     try {
-      const hashLine = await generatePmkidHash(quickPassword.trim(), quickSsid.trim());
+      const hashLine = await generateValidPmkidHash(quickPassword.trim(), quickSsid.trim());
       const created = addHash(database, {
         source: 'hash',
         hashLine,
@@ -123,7 +92,7 @@ function AttackPanel() {
     } finally {
       setIsGenerating(false);
     }
-  }, [quickPassword, quickSsid, database, generatePmkidHash, refreshDatabase, setSelectedHashes]);
+  }, [quickPassword, quickSsid, database, refreshDatabase, setSelectedHashes]);
 
   const pendingHashes = useMemo(
     () => database?.hashes?.filter((hash) => hash.status === 'pending') || [],
