@@ -1,5 +1,7 @@
 # WiFi Password Cracking Simulation with Hashcat
 
+  sudo WORDLIST_PATH=/tmp/rockyou_sample.txt WORDLIST_ROCKYOU_SAMPLE_PATH=/tmp/rockyou_sample.txt node server/src/index.js
+
 A comprehensive educational React application simulating WiFi WPA/WPA2 password cracking using hashcat concepts. This is a diploma project demonstrating the mechanics of WiFi security testing.
 
 ![HashCracker Demo](https://via.placeholder.com/800x400/0a0a0f/00ff88?text=HashCracker+Dashboard)

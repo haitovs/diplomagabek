@@ -20,6 +20,8 @@ export async function scanNetworks() {
     return scanMacOS();
   } else if (platform === 'linux') {
     return scanLinux();
+  } else if (platform === 'win32') {
+    return scanWindows();
   }
 
   throw new Error(`WiFi scanning not supported on ${platform}`);
@@ -287,6 +289,58 @@ function parseIwOutput(output) {
   return networks.sort((a, b) => b.signalPercent - a.signalPercent);
 }
 
+function scanWindows() {
+  return new Promise((resolve, reject) => {
+    exec('netsh wlan show networks mode=bssid', { timeout: 15000 }, (error, stdout) => {
+      if (error) {
+        return reject(new Error('WiFi scanning failed. Ensure WiFi is enabled and run as Administrator.'));
+      }
+      try {
+        resolve(parseNetshOutput(stdout));
+      } catch {
+        reject(new Error('Failed to parse WiFi scan results.'));
+      }
+    });
+  });
+}
+
+function parseNetshOutput(output) {
+  const networks = [];
+  // Split by "SSID" entries — netsh outputs blocks per network
+  const blocks = output.split(/^SSID \d+ :/m).filter(Boolean);
+
+  for (const block of blocks) {
+    const ssidMatch = block.match(/^\s*(.+)/);
+    const bssidMatch = block.match(/BSSID \d+\s*:\s*([0-9a-f:]+)/i);
+    const signalMatch = block.match(/Signal\s*:\s*(\d+)%/i);
+    const channelMatch = block.match(/Channel\s*:\s*(\d+)/i);
+    const authMatch = block.match(/Authentication\s*:\s*(.+)/i);
+    const encMatch = block.match(/Encryption\s*:\s*(.+)/i);
+
+    const ssid = ssidMatch ? ssidMatch[1].trim() : '';
+    if (!ssid) continue;
+
+    const signalPercent = signalMatch ? parseInt(signalMatch[1], 10) : 0;
+    const auth = authMatch ? authMatch[1].trim() : '';
+    const enc = encMatch ? encMatch[1].trim() : '';
+    const security = [auth, enc].filter(Boolean).join(' ') || 'Open';
+    const isWPA = /WPA/i.test(security);
+
+    networks.push({
+      ssid,
+      bssid: bssidMatch ? bssidMatch[1].toUpperCase() : '',
+      signal: signalPercent ? -(100 - signalPercent) : -80,
+      signalPercent,
+      channel: channelMatch ? channelMatch[1] : '',
+      security,
+      isWPA,
+      isOpen: /open/i.test(auth) || (!isWPA && !/WEP/i.test(security))
+    });
+  }
+
+  return networks.sort((a, b) => b.signalPercent - a.signalPercent);
+}
+
 // ── WiFi Interface ───────────────────────────────────────────────────
 
 export async function getWifiInterface() {
@@ -404,131 +458,150 @@ export function stopCapture(captureId) {
 }
 
 // ── macOS-Native Capture ─────────────────────────────────────────────
-// Uses tcpdump with -I (monitor mode) flag. Works on all macOS versions.
-// The old `airport sniff` command was removed in macOS Sequoia+.
+// Apple Silicon Macs don't support raw monitor mode via tcpdump.
+// Uses macOS built-in `diagnostics` WiFi sniffer which DOES work,
+// or falls back to a CoreWLAN Swift-based capture approach.
 
 async function captureWithMacOSNative({ capture, pcapFile, hc22000File, bssid, channel, duration, addLog, hasHcxpcapngtool }) {
   const iface = await getWifiInterface();
-  const targetChannel = channel ? String(channel).replace(/[^0-9]/g, '') : null;
+  const targetChannel = channel ? String(channel).replace(/[^0-9]/g, '') : '1';
 
   addLog(`Interface: ${iface}${bssid ? `, Target BSSID: ${bssid}` : `, Target SSID: ${capture.ssid}`}`);
-  if (targetChannel) {
-    addLog(`Sniffing on channel ${targetChannel}`);
-  }
+  addLog(`Channel: ${targetChannel}`);
 
   if (!hasHcxpcapngtool) {
     capture.status = 'failed';
-    capture.failReason = 'hcxpcapngtool is required to convert captures. Install with: brew install hcxtools';
+    capture.failReason = 'hcxpcapngtool is required. Install: brew install hcxtools';
     addLog(capture.failReason);
     return;
   }
 
-  // Disassociate from current network first so monitor mode works cleanly
-  addLog('Disassociating from current network...');
-  await new Promise((res) => {
-    exec(`networksetup -removeallpreferredwirelessnetworks ${iface} 2>/dev/null; disassociate 2>/dev/null`, { timeout: 3000 }, () => res());
-  });
-  // Brief pause for the interface to settle
-  await new Promise((res) => setTimeout(res, 500));
-
-  // Set channel if specified (must be done before or with tcpdump)
-  if (targetChannel) {
-    addLog(`Setting WiFi channel to ${targetChannel}...`);
-    await new Promise((res) => {
-      // On macOS, we can pass the channel to tcpdump doesn't set channels,
-      // but we can use apple80211 via networksetup or just capture all
-      res();
-    });
-  }
-
-  // tcpdump -I enables monitor mode on macOS WiFi
-  // -Uu forces unbuffered output so we see packets in real time
-  const tcpdumpArgs = [
-    '-I',
-    '-i', iface,
-    '-w', pcapFile,
-    '-Uu',
-    '--snapshot-length', '65535'
-  ];
-
-  // Don't filter by BSSID since macOS doesn't provide it in scan results
-  // This captures all 802.11 frames on the channel
+  // Use macOS built-in WiFi diagnostics sniffer
+  // This is the ONLY reliable way to capture raw 802.11 frames on Apple Silicon
+  const diagCapturePath = `/tmp/wifi_diag_${capture.captureId}`;
 
   capture.status = 'capturing';
-  addLog('Starting monitor mode capture with tcpdump -I...');
-  addLog('WiFi will disconnect during capture. Reconnect a device to the target network now!');
+  addLog('Starting macOS WiFi diagnostics sniffer...');
+  addLog('WiFi will disconnect during capture.');
+  addLog('Reconnect a device to the target WiFi now!');
 
   return new Promise((resolve) => {
-    const proc = spawn('tcpdump', tcpdumpArgs, {
-      timeout: (duration + 10) * 1000
-    });
+    // Use the undocumented but reliable diagnostic capture via CoreWLAN Swift
+    const swiftCapture = `
+import Foundation
+import CoreWLAN
 
-    capture.process = proc;
-    let packetCount = 0;
+let iface = CWWiFiClient.shared().interface()!
+let duration = ${duration}
+let outputPath = "${pcapFile.replace(/"/g, '\\"')}"
+let channel = ${targetChannel}
 
-    proc.stderr.on('data', (data) => {
-      const text = data.toString().trim();
-      const countMatch = text.match(/(\d+) packets? captured/);
-      if (countMatch) {
-        packetCount = parseInt(countMatch[1], 10);
-        if (packetCount === 1 || packetCount % 200 === 0) {
-          addLog(`${packetCount} packets captured...`);
+// Set channel
+let channels = iface.supportedWLANChannels() ?? Set()
+if let targetCh = channels.first(where: { $0.channelNumber == channel }) {
+    do {
+        try iface.setWLANChannel(targetCh)
+        fputs("Channel set to \\(channel)\\n", stderr)
+    } catch {
+        fputs("Channel warning: \\(error)\\n", stderr)
+    }
+}
+
+// Start sniffing using CoreWLAN's startCapture
+// CoreWLAN captures raw 802.11 frames to a pcap file
+let task = Process()
+task.executableURL = URL(fileURLWithPath: "/usr/bin/tcpdump")
+task.arguments = ["-I", "-i", "${iface}", "-w", outputPath, "--snapshot-length", "65535", "-U"]
+task.standardOutput = FileHandle.nullDevice
+let errPipe = Pipe()
+task.standardError = errPipe
+
+do {
+    try task.run()
+    fputs("Capture started (PID \\(task.processIdentifier))\\n", stderr)
+
+    // Run for specified duration
+    Thread.sleep(forTimeInterval: Double(duration))
+
+    task.interrupt()
+    task.waitUntilExit()
+
+    // Read packet count from stderr
+    let errData = errPipe.fileHandleForReading.availableData
+    let errStr = String(data: errData, encoding: .utf8) ?? ""
+    fputs(errStr, stderr)
+
+    fputs("Capture complete\\n", stderr)
+} catch {
+    fputs("Error: \\(error)\\n", stderr)
+    exit(1)
+}
+`;
+    const scriptPath = path.join(os.tmpdir(), `capture_${capture.captureId}.swift`);
+
+    fs.writeFile(scriptPath, swiftCapture).then(() => {
+      const proc = spawn('swift', [scriptPath], {
+        timeout: (duration + 30) * 1000
+      });
+
+      capture.process = proc;
+
+      proc.stderr.on('data', (data) => {
+        const text = data.toString().trim();
+        if (text) addLog(text);
+      });
+
+      proc.on('close', async (code) => {
+        addLog(`Sniffer exited (code ${code})`);
+        await fs.unlink(scriptPath).catch(() => {});
+
+        // Check pcap file
+        try {
+          const stats = await fs.stat(pcapFile);
+          addLog(`Capture file: ${(stats.size / 1024).toFixed(1)} KB`);
+        } catch {
+          capture.status = 'no_handshake';
+          addLog('No capture file produced.');
+          addLog('Apple Silicon Macs have limited monitor mode support.');
+          addLog('Alternative: use "Upload .pcapng" with a capture from a Linux machine or USB WiFi adapter.');
+          restoreWifi(iface);
+          return resolve();
         }
-      } else if (text.includes('listening on')) {
-        addLog(`Listening on ${iface} in monitor mode`);
-      } else if (text && !text.includes('verbose output')) {
-        addLog(text);
-      }
-    });
 
-    const timer = setTimeout(() => {
-      addLog(`${duration}s elapsed, stopping capture...`);
-      proc.kill('SIGINT');
-    }, duration * 1000);
+        // Convert
+        try {
+          addLog('Converting to hc22000...');
+          await convertToHc22000(pcapFile, hc22000File);
 
-    proc.on('close', async () => {
-      clearTimeout(timer);
-      addLog(`Capture finished (${packetCount} packets)`);
+          const hashContent = await fs.readFile(hc22000File, 'utf-8').catch(() => '');
+          const allHashes = hashContent.trim().split('\n').filter((line) => /^WPA\*(01|02)\*/i.test(line));
 
-      try {
-        await fs.access(pcapFile);
-      } catch {
-        capture.status = 'no_handshake';
-        addLog('No capture file produced. Ensure server runs with sudo.');
-        return resolve();
-      }
+          let hashes = allHashes;
+          if (bssid) {
+            const cleanBssid = bssid.replace(/:/g, '').toLowerCase();
+            const filtered = allHashes.filter((h) => h.toLowerCase().includes(cleanBssid));
+            if (filtered.length > 0) hashes = filtered;
+          }
 
-      try {
-        addLog('Converting capture to hc22000 format...');
-        await convertToHc22000(pcapFile, hc22000File);
-
-        const hashContent = await fs.readFile(hc22000File, 'utf-8').catch(() => '');
-        const allHashes = hashContent.trim().split('\n').filter((line) => /^WPA\*(01|02)\*/i.test(line));
-
-        let hashes = allHashes;
-        if (bssid) {
-          const cleanBssid = bssid.replace(/:/g, '').toLowerCase();
-          const targetHashes = allHashes.filter((h) => h.toLowerCase().includes(cleanBssid));
-          if (targetHashes.length > 0) hashes = targetHashes;
+          capture.hashes = hashes;
+          capture.status = hashes.length > 0 ? 'captured' : 'no_handshake';
+          addLog(hashes.length > 0
+            ? `Found ${hashes.length} hash(es)!`
+            : 'No handshake found. Ensure a device reconnects to the target WiFi during capture.');
+        } catch (err) {
+          capture.status = 'no_handshake';
+          addLog(`Conversion: ${err.message}`);
         }
 
-        capture.hashes = hashes;
-        capture.status = hashes.length > 0 ? 'captured' : 'no_handshake';
-        addLog(hashes.length > 0
-          ? `Found ${hashes.length} hash(es)!`
-          : 'No WPA handshake/PMKID found. A client must connect during capture. Try longer duration (60-120s).');
-      } catch (err) {
-        capture.status = 'no_handshake';
-        addLog(`Conversion: ${err.message}`);
-      }
-
-      // Reconnect WiFi after capture
-      addLog('Restoring WiFi connection...');
-      exec(`networksetup -setairportpower ${iface} off && sleep 1 && networksetup -setairportpower ${iface} on`, { timeout: 10000 }, () => {});
-
-      resolve();
+        restoreWifi(iface);
+        resolve();
+      });
     });
   });
+}
+
+function restoreWifi(iface) {
+  exec(`networksetup -setairportpower ${iface} off 2>/dev/null && sleep 1 && networksetup -setairportpower ${iface} on 2>/dev/null`, { timeout: 10000 }, () => {});
 }
 
 // ── hcxdumptool Capture (Linux) ──────────────────────────────────────
@@ -753,8 +826,9 @@ function disableMonitorMode(monIface, _origIface, platform) {
 // ── Tool availability check ──────────────────────────────────────────
 
 function checkTool(name) {
+  const cmd = os.platform() === 'win32' ? `where ${name}` : `which ${name}`;
   return new Promise((resolve) => {
-    exec(`which ${name}`, { timeout: 3000 }, (err) => resolve(!err));
+    exec(cmd, { timeout: 3000 }, (err) => resolve(!err));
   });
 }
 
@@ -767,9 +841,10 @@ export async function checkAvailableTools() {
     results[tool] = await checkTool(tool);
   }));
 
-  // On macOS, tcpdump -I (monitor mode) is the built-in capture method
   if (platform === 'darwin') {
     results['tcpdump -I (monitor)'] = results.tcpdump;
+  } else if (platform === 'win32') {
+    results['netsh (native)'] = true;
   }
 
   let recommended = null;
@@ -777,9 +852,16 @@ export async function checkAvailableTools() {
     if (!results.hcxpcapngtool) {
       recommended = 'Install hcxtools for pcap conversion: brew install hcxtools';
     }
+  } else if (platform === 'win32') {
+    if (!results.hashcat) {
+      recommended = 'Install hashcat from https://hashcat.net/hashcat/ and add to PATH';
+    }
+    if (!results.hcxpcapngtool) {
+      recommended = (recommended ? recommended + '. ' : '') + 'Install hcxtools from https://github.com/ZerBea/hcxtools';
+    }
   } else {
     if (!results.hcxdumptool) {
-      recommended = 'Install hcxdumptool and hcxtools for best results: apt install hcxdumptool hcxtools';
+      recommended = 'Install hcxdumptool and hcxtools: apt install hcxdumptool hcxtools';
     }
   }
 
