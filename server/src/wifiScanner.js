@@ -476,9 +476,7 @@ async function captureWithMacOSNative({ capture, pcapFile, hc22000File, bssid, c
     return;
   }
 
-  // Use macOS built-in WiFi diagnostics sniffer
-  // This is the ONLY reliable way to capture raw 802.11 frames on Apple Silicon
-  const diagCapturePath = `/tmp/wifi_diag_${capture.captureId}`;
+
 
   capture.status = 'capturing';
   addLog('Starting macOS WiFi diagnostics sniffer...');
@@ -486,31 +484,15 @@ async function captureWithMacOSNative({ capture, pcapFile, hc22000File, bssid, c
   addLog('Reconnect a device to the target WiFi now!');
 
   return new Promise((resolve) => {
-    // Use the undocumented but reliable diagnostic capture via CoreWLAN Swift
     const swiftCapture = `
 import Foundation
-import CoreWLAN
 
-let iface = CWWiFiClient.shared().interface()!
 let duration = ${duration}
 let outputPath = "${pcapFile.replace(/"/g, '\\"')}"
-let channel = ${targetChannel}
 
-// Set channel
-let channels = iface.supportedWLANChannels() ?? Set()
-if let targetCh = channels.first(where: { $0.channelNumber == channel }) {
-    do {
-        try iface.setWLANChannel(targetCh)
-        fputs("Channel set to \\(channel)\\n", stderr)
-    } catch {
-        fputs("Channel warning: \\(error)\\n", stderr)
-    }
-}
-
-// Start sniffing using CoreWLAN's startCapture
-// CoreWLAN captures raw 802.11 frames to a pcap file
+let tcpdumpPath = FileManager.default.fileExists(atPath: "/usr/sbin/tcpdump") ? "/usr/sbin/tcpdump" : "/usr/bin/tcpdump"
 let task = Process()
-task.executableURL = URL(fileURLWithPath: "/usr/bin/tcpdump")
+task.executableURL = URL(fileURLWithPath: tcpdumpPath)
 task.arguments = ["-I", "-i", "${iface}", "-w", outputPath, "--snapshot-length", "65535", "-U"]
 task.standardOutput = FileHandle.nullDevice
 let errPipe = Pipe()
@@ -518,18 +500,17 @@ task.standardError = errPipe
 
 do {
     try task.run()
-    fputs("Capture started (PID \\(task.processIdentifier))\\n", stderr)
+    fputs("Capture started on ${iface} in monitor mode (PID \\(task.processIdentifier))\\n", stderr)
+    fputs("Waiting \\(duration) seconds...\\n", stderr)
 
-    // Run for specified duration
     Thread.sleep(forTimeInterval: Double(duration))
 
     task.interrupt()
     task.waitUntilExit()
 
-    // Read packet count from stderr
     let errData = errPipe.fileHandleForReading.availableData
     let errStr = String(data: errData, encoding: .utf8) ?? ""
-    fputs(errStr, stderr)
+    if !errStr.isEmpty { fputs(errStr, stderr) }
 
     fputs("Capture complete\\n", stderr)
 } catch {
@@ -562,8 +543,8 @@ do {
         } catch {
           capture.status = 'no_handshake';
           addLog('No capture file produced.');
-          addLog('Apple Silicon Macs have limited monitor mode support.');
-          addLog('Alternative: use "Upload .pcapng" with a capture from a Linux machine or USB WiFi adapter.');
+          addLog('Apple Silicon Macs cannot capture raw WiFi with built-in WiFi.');
+          addLog('Alternatives: (1) Upload .pcapng from Linux/Kali, (2) USB WiFi adapter, (3) Run app on Kali VM');
           restoreWifi(iface);
           return resolve();
         }

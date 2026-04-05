@@ -1,14 +1,11 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────
 # HashCracker — WiFi Security Analysis Tool
-# Run script for macOS / Linux / Kali
-# Opens backend and frontend in separate terminal windows
+# One-command start for macOS / Linux / Kali
 # ─────────────────────────────────────────────────────────────────────
 
 set -e
-
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$PROJECT_DIR"
+cd "$(dirname "$0")"
 
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
@@ -25,121 +22,52 @@ echo -e "${NC}"
 
 # ── Check Node.js ──
 if ! command -v node &>/dev/null; then
-    echo -e "${RED}Error: Node.js is not installed.${NC}"
-    echo "Install from: https://nodejs.org/"
+    echo -e "${RED}Error: Node.js not found. Install from https://nodejs.org/${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓${NC} Node.js $(node -v)"
 
-# ── Install dependencies if needed ──
-if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}Installing frontend dependencies...${NC}"
-    npm install
-fi
-if [ ! -d "server/node_modules" ]; then
-    echo -e "${YELLOW}Installing backend dependencies...${NC}"
-    npm --prefix server install
-fi
-echo -e "${GREEN}✓${NC} Dependencies installed"
+# ── Install deps ──
+[ ! -d "node_modules" ] && echo -e "${YELLOW}Installing frontend deps...${NC}" && npm install
+[ ! -d "server/node_modules" ] && echo -e "${YELLOW}Installing backend deps...${NC}" && npm --prefix server install
+echo -e "${GREEN}✓${NC} Dependencies ready"
 
 # ── Check tools ──
-if command -v hashcat &>/dev/null; then
-    echo -e "${GREEN}✓${NC} hashcat found"
-else
-    echo -e "${YELLOW}⚠${NC} hashcat not found"
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "    Install: brew install hashcat"
-    else
-        echo "    Install: sudo apt install hashcat"
-    fi
-fi
+command -v hashcat &>/dev/null && echo -e "${GREEN}✓${NC} hashcat" || echo -e "${YELLOW}⚠ hashcat not found${NC}"
+command -v hcxpcapngtool &>/dev/null && echo -e "${GREEN}✓${NC} hcxpcapngtool" || echo -e "${YELLOW}⚠ hcxpcapngtool not found${NC}"
 
-if command -v hcxpcapngtool &>/dev/null; then
-    echo -e "${GREEN}✓${NC} hcxpcapngtool found"
-else
-    echo -e "${YELLOW}⚠${NC} hcxpcapngtool not found"
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "    Install: brew install hcxtools"
-    else
-        echo "    Install: sudo apt install hcxtools"
-    fi
-fi
-
-# ── Setup wordlist ──
-WORDLIST_PATH="${WORDLIST_PATH:-/tmp/rockyou_sample.txt}"
+# ── Wordlist ──
+export WORDLIST_PATH="${WORDLIST_PATH:-/tmp/rockyou_sample.txt}"
 if [ ! -f "$WORDLIST_PATH" ]; then
     echo -e "${YELLOW}Downloading sample wordlist...${NC}"
     curl -sL -o "$WORDLIST_PATH" \
-        "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt" \
-        2>/dev/null || true
+        "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt" 2>/dev/null || true
 fi
-[ -f "$WORDLIST_PATH" ] && echo -e "${GREEN}✓${NC} Wordlist ready"
+export WORDLIST_ROCKYOU_SAMPLE_PATH="$WORDLIST_PATH"
+export WORDLIST_ROCKYOU_PATH="$WORDLIST_PATH"
 
-echo ""
-
-# ── Build env string ──
-ENV_VARS="WORDLIST_PATH='$WORDLIST_PATH' WORDLIST_ROCKYOU_SAMPLE_PATH='$WORDLIST_PATH' WORDLIST_ROCKYOU_PATH='$WORDLIST_PATH'"
-BACKEND_CMD="$ENV_VARS node server/src/index.js"
-FRONTEND_CMD="npx vite --host 0.0.0.0"
+# ── Build frontend ──
+if [ ! -d "dist" ] || [ "$(find src -newer dist/index.html 2>/dev/null | head -1)" ]; then
+    echo -e "${YELLOW}Building frontend...${NC}"
+    npx vite build --silent 2>/dev/null || npx vite build
+fi
+echo -e "${GREEN}✓${NC} Frontend built"
 
 # ── Sudo hint ──
-if [ "$EUID" -ne 0 ] 2>/dev/null; then
-    echo -e "${YELLOW}Tip:${NC} Run with ${CYAN}sudo ./run.sh${NC} for WiFi capture support"
-    echo ""
-fi
+[ "$EUID" -ne 0 ] 2>/dev/null && echo -e "${YELLOW}Tip:${NC} sudo ./run.sh for WiFi capture" && echo ""
 
-# ── Open in separate terminal windows ──
-open_terminal() {
-    local title="$1"
-    local cmd="$2"
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        osascript <<EOF
-tell application "Terminal"
-    activate
-    do script "cd '$PROJECT_DIR' && clear && echo '━━━ $title ━━━' && echo '' && $cmd"
-end tell
-EOF
-    elif command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="$title" -- bash -c "cd '$PROJECT_DIR' && echo '━━━ $title ━━━' && $cmd; exec bash" &
-    elif command -v xfce4-terminal &>/dev/null; then
-        xfce4-terminal --title="$title" -e "bash -c \"cd '$PROJECT_DIR' && echo '━━━ $title ━━━' && $cmd; exec bash\"" &
-    elif command -v konsole &>/dev/null; then
-        konsole -e bash -c "cd '$PROJECT_DIR' && echo '━━━ $title ━━━' && $cmd; exec bash" &
-    elif command -v xterm &>/dev/null; then
-        xterm -title "$title" -e "cd '$PROJECT_DIR' && echo '━━━ $title ━━━' && $cmd; bash" &
-    elif command -v qterminal &>/dev/null; then
-        qterminal -e "bash -c \"cd '$PROJECT_DIR' && $cmd; exec bash\"" &
-    else
-        echo -e "${YELLOW}No GUI terminal found. Starting $title in background.${NC}"
-        bash -c "cd '$PROJECT_DIR' && $cmd" &
-        echo "  PID: $!"
-    fi
-}
-
-echo -e "${CYAN}Starting services in separate terminals...${NC}"
 echo ""
-
-# ── Start Backend ──
-open_terminal "HashCracker Backend (port 8080)" "$BACKEND_CMD"
-sleep 2
-
-# ── Start Frontend ──
-open_terminal "HashCracker Frontend (port 5173)" "$FRONTEND_CMD"
-sleep 1
-
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}  Both services started!${NC}"
-echo ""
-echo -e "  Frontend: ${CYAN}http://localhost:5173${NC}"
-echo -e "  Backend:  ${CYAN}http://localhost:8080${NC}"
-echo ""
-echo -e "  Close the terminal windows to stop."
+echo -e "  Open ${CYAN}http://localhost:8080${NC} in your browser"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
 
-# Open browser
+# ── Open browser ──
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sleep 2 && open "http://localhost:5173" &
+    (sleep 2 && open "http://localhost:8080") &
 elif command -v xdg-open &>/dev/null; then
-    sleep 2 && xdg-open "http://localhost:5173" &
+    (sleep 2 && xdg-open "http://localhost:8080") &
 fi
+
+# ── Start server (serves both API + frontend) ──
+node server/src/index.js

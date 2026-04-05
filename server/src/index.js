@@ -2,6 +2,8 @@ import cors from 'cors';
 import express from 'express';
 import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { startBruteforceAttack, startDictionaryAttack, startHybridAttack } from './hashcatRunner.js';
 import { buildMask, identifyHashType, scorePassword } from './securityTools.js';
 import multer from 'multer';
@@ -413,6 +415,24 @@ app.post('/api/wifi/captures/:captureId/stop', (req, res) => {
   return res.json({ ok: true });
 });
 
+// ── Serve built frontend (production mode) ───────────────────────────
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distDir = path.resolve(__dirname, '../../dist');
+
+try {
+  const distStat = await fs.stat(distDir);
+  if (distStat.isDirectory()) {
+    app.use(express.static(distDir));
+    // SPA fallback — serve index.html for any non-API route
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(distDir, 'index.html'));
+    });
+    console.log(`Serving frontend from ${distDir}`);
+  }
+} catch {
+  console.log('No dist/ folder found — run "npm run build" to serve frontend from this server.');
+}
+
 app.listen(PORT, HOST, () => {
-  console.log(`Hashcat API running on http://${HOST}:${PORT}`);
+  console.log(`HashCracker running on http://${HOST}:${PORT}`);
 });
