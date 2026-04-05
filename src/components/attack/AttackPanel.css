@@ -303,6 +303,56 @@
   color: var(--text-primary);
 }
 
+/* ── Attack Progress Bar ── */
+
+.attack-progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.attack-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.attack-progress-header span:first-child {
+  color: var(--text-tertiary);
+}
+
+.attack-progress-pct {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent-green);
+  font-size: 0.95rem;
+}
+
+.attack-progress-bar {
+  height: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.attack-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+  border-radius: 6px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.attack-progress-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
 @media (max-width: 900px) {
   .attack-grid {
     grid-template-columns: 1fr;

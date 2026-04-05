@@ -108,3 +108,52 @@ export async function buildCustomMask(options) {
     body: JSON.stringify(options)
   });
 }
+
+// ── WiFi Scanner API ─────────────────────────────────────────────────
+
+export async function scanWifiNetworks() {
+  return request('/wifi/scan');
+}
+
+export async function checkWifiTools() {
+  return request('/wifi/tools');
+}
+
+export async function startWifiCapture({ bssid, ssid, channel, duration }) {
+  return request('/wifi/capture', {
+    method: 'POST',
+    body: JSON.stringify({ bssid, ssid, channel, duration })
+  });
+}
+
+export async function getCaptureStatus(captureId) {
+  return request(`/wifi/captures/${captureId}`);
+}
+
+export async function stopWifiCapture(captureId) {
+  return request(`/wifi/captures/${captureId}/stop`, {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
+}
+
+export async function listCaptures() {
+  return request('/wifi/captures');
+}
+
+export async function convertPcapFile(file) {
+  const formData = new FormData();
+  formData.append('pcapfile', file);
+
+  const response = await fetch(buildUrl('/wifi/convert'), {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.message || `Upload failed with status ${response.status}`);
+  }
+
+  return response.json();
+}

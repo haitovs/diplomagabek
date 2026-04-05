@@ -1,0 +1,410 @@
+.wifi-scanner-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wifi-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wifi-toolbar .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wifi-tools-banner {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.wifi-tools-banner .tools-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.wifi-tools-banner .tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+}
+
+.tool-chip.available {
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.tool-chip.missing {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.wifi-recommendation {
+  margin-top: 6px;
+  color: var(--accent-yellow);
+  font-size: 0.8rem;
+}
+
+/* ── Network List ── */
+
+.wifi-network-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wifi-network-card {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.wifi-network-card:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 200, 255, 0.08);
+}
+
+.wifi-network-card.selected {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 16px rgba(0, 255, 100, 0.1);
+}
+
+.wifi-network-card.open-network {
+  opacity: 0.6;
+}
+
+.wifi-signal-indicator {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 20px;
+}
+
+.wifi-signal-indicator .bar {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--glass-border);
+  transition: background 0.3s;
+}
+
+.wifi-signal-indicator .bar.active {
+  background: var(--accent-green);
+}
+
+.wifi-signal-indicator .bar:nth-child(1) { height: 5px; }
+.wifi-signal-indicator .bar:nth-child(2) { height: 9px; }
+.wifi-signal-indicator .bar:nth-child(3) { height: 13px; }
+.wifi-signal-indicator .bar:nth-child(4) { height: 18px; }
+
+.wifi-network-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wifi-network-ssid {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wifi-network-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.wifi-network-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.wifi-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wifi-badge.wpa {
+  background: rgba(0, 200, 100, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0, 200, 100, 0.3);
+}
+
+.wifi-badge.open {
+  background: rgba(255, 180, 0, 0.15);
+  color: var(--accent-yellow);
+  border: 1px solid rgba(255, 180, 0, 0.3);
+}
+
+.wifi-badge.channel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+}
+
+.wifi-network-actions {
+  flex-shrink: 0;
+}
+
+/* ── Capture Panel ── */
+
+.wifi-capture-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.capture-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-cyan);
+}
+
+.capture-panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.capture-target-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.capture-target-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.capture-target-field .label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.capture-target-field .value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.capture-config {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.capture-config label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.capture-config input[type="number"] {
+  width: 80px;
+}
+
+.capture-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.capture-status {
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--glass-border);
+}
+
+.capture-status-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.capture-status-badge {
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.capture-status-badge.capturing {
+  background: rgba(0, 150, 255, 0.15);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 150, 255, 0.3);
+}
+
+.capture-status-badge.captured {
+  background: rgba(0, 200, 100, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0, 200, 100, 0.3);
+}
+
+.capture-status-badge.failed,
+.capture-status-badge.no_handshake {
+  background: rgba(255, 80, 80, 0.15);
+  color: var(--accent-red, #ff5050);
+  border: 1px solid rgba(255, 80, 80, 0.3);
+}
+
+.capture-status-badge.stopped {
+  background: rgba(255, 180, 0, 0.15);
+  color: var(--accent-yellow);
+  border: 1px solid rgba(255, 180, 0, 0.3);
+}
+
+.capture-log {
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.capture-log-entry {
+  display: flex;
+  gap: 8px;
+}
+
+.capture-log-time {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Captured Hashes ── */
+
+.captured-hashes-section {
+  padding: 14px;
+  border: 1px solid var(--accent-green);
+  border-radius: var(--border-radius-sm);
+  background: rgba(0, 200, 100, 0.05);
+}
+
+.captured-hashes-section h4 {
+  margin: 0 0 10px;
+  color: var(--accent-green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.captured-hash-line {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  word-break: break-all;
+  padding: 6px 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  max-height: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.import-hashes-btn {
+  margin-top: 8px;
+}
+
+/* ── Empty state ── */
+
+.wifi-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-secondary);
+}
+
+.wifi-empty-state svg {
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.wifi-empty-state h3 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+}
+
+.wifi-empty-state p {
+  margin: 0;
+  font-size: 0.85rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* ── Scanning spinner ── */
+
+.wifi-scanning-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+@keyframes wifi-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.wifi-scanning-overlay svg {
+  animation: wifi-pulse 1.5s ease-in-out infinite;
+  color: var(--accent-cyan);
+}
+
+.wifi-scan-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .wifi-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wifi-network-card {
+    flex-wrap: wrap;
+  }
+
+  .capture-target-info {
+    grid-template-columns: 1fr 1fr;
+  }
+}

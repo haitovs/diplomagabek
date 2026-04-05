@@ -4,6 +4,18 @@ import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { startBruteforceAttack, startDictionaryAttack, startHybridAttack } from './hashcatRunner.js';
 import { buildMask, identifyHashType, scorePassword } from './securityTools.js';
+import multer from 'multer';
+import {
+  checkAvailableTools,
+  convertPcapFile,
+  getAllCaptures,
+  getCapture,
+  scanNetworks,
+  startCapture,
+  stopCapture
+} from './wifiScanner.js';
+
+const upload = multer({ dest: '/tmp/hashcracker-uploads/', limits: { fileSize: 100 * 1024 * 1024 } });
 
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -321,6 +333,84 @@ app.post('/api/tools/password-strength', (req, res) => {
 app.post('/api/tools/mask-builder', (req, res) => {
   const payload = req.body || {};
   return res.json(buildMask(payload));
+});
+
+// ── WiFi Scanner Routes ──────────────────────────────────────────────
+
+app.get('/api/wifi/scan', async (_req, res) => {
+  try {
+    const networks = await scanNetworks();
+    return res.json({ networks, scannedAt: new Date().toISOString() });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+app.get('/api/wifi/tools', async (_req, res) => {
+  try {
+    const info = await checkAvailableTools();
+    return res.json(info);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+app.post('/api/wifi/capture', async (req, res) => {
+  const { bssid, ssid, channel, duration } = req.body || {};
+
+  if (!bssid && !ssid) {
+    return res.status(400).json({ message: 'bssid or ssid is required.' });
+  }
+
+  try {
+    const result = await startCapture({
+      bssid,
+      ssid,
+      channel,
+      duration: Math.min(Number(duration) || 60, 300) // max 5 minutes
+    });
+    return res.status(202).json(result);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+app.get('/api/wifi/captures', (_req, res) => {
+  const captures = getAllCaptures().map(({ process, ...rest }) => rest);
+  return res.json({ captures });
+});
+
+app.get('/api/wifi/captures/:captureId', (req, res) => {
+  const capture = getCapture(req.params.captureId);
+  if (!capture) {
+    return res.status(404).json({ message: 'Capture not found.' });
+  }
+  const { process, ...rest } = capture;
+  return res.json(rest);
+});
+
+app.post('/api/wifi/convert', upload.single('pcapfile'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded. Send a pcapng/cap file as "pcapfile".' });
+  }
+
+  try {
+    const result = await convertPcapFile(req.file.path);
+    // Clean up uploaded file
+    await fs.unlink(req.file.path).catch(() => {});
+    return res.json(result);
+  } catch (err) {
+    await fs.unlink(req.file.path).catch(() => {});
+    return res.status(500).json({ message: `Conversion failed: ${err.message}` });
+  }
+});
+
+app.post('/api/wifi/captures/:captureId/stop', (req, res) => {
+  const ok = stopCapture(req.params.captureId);
+  if (!ok) {
+    return res.status(404).json({ message: 'Capture not found.' });
+  }
+  return res.json({ ok: true });
 });
 
 app.listen(PORT, HOST, () => {

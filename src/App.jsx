@@ -11,6 +11,7 @@ import StatsCards from './components/dashboard/StatsCards';
 import HashTable from './components/database/HashTable';
 import CrackedList from './components/results/CrackedList';
 import SecurityTools from './components/tools/SecurityTools';
+import WifiScanner from './components/wifi/WifiScanner';
 import { CrackingProvider, useCracking } from './context/CrackingContext';
 import { useI18n } from './context/I18nContext';
 
@@ -45,6 +46,8 @@ function AppContent() {
             </div>
           </div>
         );
+      case 'wifi':
+        return <WifiScanner />;
       case 'about':
         return <AboutHashcat />;
       case 'tools':
@@ -61,6 +64,7 @@ function AppContent() {
       attack: t('page.attack'),
       results: t('page.results'),
       logs: t('page.logs'),
+      wifi: t('page.wifi'),
       tools: t('page.tools'),
       about: t('page.about')
     };

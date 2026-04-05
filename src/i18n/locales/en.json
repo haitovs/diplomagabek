@@ -18,6 +18,7 @@
     "attack": "Attack Panel",
     "results": "Cracked Passwords",
     "logs": "Activity Logs",
+    "wifi": "WiFi Scanner",
     "tools": "Security Tools",
     "about": "About Hashcat"
   },
@@ -27,6 +28,7 @@
     "attack": "Attack Panel",
     "results": "Cracked Passwords",
     "logs": "Activity Logs",
+    "wifi": "WiFi Scanner",
     "tools": "Security Tools",
     "about": "About Hashcat",
     "activeAttack": "Attack in Progress"
@@ -393,6 +395,49 @@
       "website": "hashcat.net - Official Website",
       "github": "Hashcat on GitHub",
       "wiki": "Hashcat Wiki & Documentation"
+    }
+  },
+  "db": {
+    "hashGenerator": "Hash Generator",
+    "hashGeneratorDesc": "Type a password to generate a real WPA hash. Then copy it or add directly to the database.",
+    "password": "Password",
+    "enterPassword": "Type password...",
+    "generateHash": "Generate",
+    "copyHash": "Copy",
+    "addToDb": "Add to DB",
+    "hashLine": "Hash (hc22000)"
+  },
+  "wifi": {
+    "toolsAvailable": "Available Capture Tools",
+    "scanning": "Scanning...",
+    "scanNetworks": "Scan WiFi Networks",
+    "networksFound": "{{total}} networks found ({{wpa}} WPA)",
+    "scanFailed": "Scan Failed",
+    "scanningDescription": "Scanning for nearby WiFi networks...",
+    "open": "Open",
+    "select": "Select",
+    "channel": "Channel",
+    "security": "Security",
+    "duration": "Duration",
+    "seconds": "seconds",
+    "captureHandshake": "Capture Handshake / PMKID",
+    "startCapture": "Start Capture",
+    "stopCapture": "Stop Capture",
+    "hashesCaptured": "{{count}} hash(es) captured!",
+    "importToDatabase": "Import to Hash Database",
+    "uploadPcap": "Upload .pcapng / .cap",
+    "converting": "Converting...",
+    "convertFailed": "Conversion Failed",
+    "noHashesInFile": "No WPA handshakes or PMKIDs found in the uploaded file.",
+    "emptyTitle": "No Networks Scanned",
+    "emptyDescription": "Click 'Scan WiFi Networks' to discover nearby access points. You can also upload a .pcapng capture file directly. Only your own authorized networks should be tested.",
+    "captureStatus": {
+      "starting": "Starting...",
+      "capturing": "Capturing...",
+      "captured": "Captured!",
+      "no_handshake": "No Handshake Found",
+      "failed": "Failed",
+      "stopped": "Stopped"
     }
   },
   "errors": {

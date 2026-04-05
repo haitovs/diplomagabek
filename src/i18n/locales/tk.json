@@ -18,6 +18,7 @@
     "attack": "Hüjüm Paneli",
     "results": "Açylan Parollar",
     "logs": "Işjeňlik Žurnallary",
+    "wifi": "WiFi Skaner",
     "tools": "Howpsuzlyk Gurallary",
     "about": "Hashcat Barada"
   },
@@ -27,6 +28,7 @@
     "attack": "Hüjüm Paneli",
     "results": "Açylan Parollar",
     "logs": "Işjeňlik Žurnallary",
+    "wifi": "WiFi Skaner",
     "tools": "Howpsuzlyk Gurallary",
     "about": "Hashcat Barada",
     "activeAttack": "Hüjüm Dowam Edýär"
@@ -393,6 +395,49 @@
       "website": "hashcat.net - Resmi Sahypa",
       "github": "GitHub-da Hashcat",
       "wiki": "Hashcat Wiki we Dokumentasiýa"
+    }
+  },
+  "db": {
+    "hashGenerator": "Hash Dörediji",
+    "hashGeneratorDesc": "Hakyky WPA hash döretmek üçin parol ýazyň. Soňra göçüriň ýa-da göni maglumat bazasyna goşuň.",
+    "password": "Parol",
+    "enterPassword": "Parol ýazyň...",
+    "generateHash": "Döret",
+    "copyHash": "Göçür",
+    "addToDb": "DB-a goş",
+    "hashLine": "Hash (hc22000)"
+  },
+  "wifi": {
+    "toolsAvailable": "Elýeterli Capture Gurallary",
+    "scanning": "Skanerlenýär...",
+    "scanNetworks": "WiFi Torlary Skanerle",
+    "networksFound": "{{total}} tor tapyldy ({{wpa}} WPA)",
+    "scanFailed": "Skaner Şowsuz",
+    "scanningDescription": "Golaýdaky WiFi torlary gözlenýär...",
+    "open": "Açyk",
+    "select": "Saýla",
+    "channel": "Kanal",
+    "security": "Howpsuzlyk",
+    "duration": "Dowamlylygy",
+    "seconds": "sekunt",
+    "captureHandshake": "Handshake / PMKID Capture",
+    "startCapture": "Capture Başlat",
+    "stopCapture": "Capture Duruz",
+    "hashesCaptured": "{{count}} hash capture edildi!",
+    "importToDatabase": "Heş Bazasyna Import Et",
+    "uploadPcap": ".pcapng / .cap Ýükle",
+    "converting": "Öwrülýär...",
+    "convertFailed": "Öwrülme Şowsuz",
+    "noHashesInFile": "Ýüklenen faýlda WPA handshake ýa-da PMKID tapylmady.",
+    "emptyTitle": "Tor Skanerlenmedi",
+    "emptyDescription": "'WiFi Torlary Skanerle' düwmesine basyp golaýdaky torlary tapyň. .pcapng capture faýlyny hem göni ýükläp bilersiňiz. Diňe öz rugsatly torlaryňyzy synag ediň.",
+    "captureStatus": {
+      "starting": "Başlaýar...",
+      "capturing": "Capture edilýär...",
+      "captured": "Capture edildi!",
+      "no_handshake": "Handshake Tapylmady",
+      "failed": "Şowsuz",
+      "stopped": "Duruzyldy"
     }
   },
   "errors": {

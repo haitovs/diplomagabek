@@ -6,6 +6,7 @@ import {
     Info,
     Key,
     LayoutDashboard,
+    Wifi,
     Wrench
 } from 'lucide-react';
 import { useCracking } from '../../context/CrackingContext';
@@ -18,6 +19,7 @@ const navItems = [
   { id: 'attack', labelKey: 'nav.attack', icon: Crosshair },
   { id: 'results', labelKey: 'nav.results', icon: Key },
   { id: 'logs', labelKey: 'nav.logs', icon: FileText },
+  { id: 'wifi', labelKey: 'nav.wifi', icon: Wifi },
   { id: 'tools', labelKey: 'nav.tools', icon: Wrench },
   { id: 'about', labelKey: 'nav.about', icon: Info },
 ];

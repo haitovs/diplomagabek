@@ -13,11 +13,10 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { addHash, importHashes, importRealNetworks } from '../../services/database/hashDB';
-import { generateValidPmkidHash } from '../../services/hashcat/pmkid';
+import { importHashes, importRealNetworks } from '../../services/database/hashDB';
 import {
   PRESET_MASKS,
   WORDLISTS,
@@ -49,9 +48,6 @@ function AttackPanel() {
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
-  const [quickPassword, setQuickPassword] = useState('');
-  const [quickSsid, setQuickSsid] = useState('TestWiFi');
-  const [isGenerating, setIsGenerating] = useState(false);
   const importInputRef = useRef(null);
   const isElectron = !!window.electronAPI;
   const isHc22000Hash = (value) => typeof value === 'string' && /^WPA\*(01|02)\*/i.test(value.trim());
@@ -61,38 +57,6 @@ function AttackPanel() {
       setTargetHash(selectedHashes[0]);
     }
   }, [selectedHashes]);
-
-  const handleQuickHash = useCallback(async () => {
-    if (!quickPassword.trim() || !quickSsid.trim() || !database) return;
-    setIsGenerating(true);
-    try {
-      const hashLine = await generateValidPmkidHash(quickPassword.trim(), quickSsid.trim());
-      const created = addHash(database, {
-        source: 'hash',
-        hashLine,
-        ssid: quickSsid.trim(),
-        password: '',
-        markAsCracked: false
-      });
-      if (created) {
-        refreshDatabase();
-        setTargetHash(created);
-        setSelectedHashes([created]);
-        setQuickPassword('');
-      }
-    } catch (error) {
-      const msg = error?.message || '';
-      if (msg.includes('duplicate')) {
-        const existing = database.hashes.find(h => h.ssid === quickSsid.trim() && h.status === 'pending');
-        if (existing) {
-          setTargetHash(existing);
-          setSelectedHashes([existing]);
-        }
-      }
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [quickPassword, quickSsid, database, refreshDatabase, setSelectedHashes]);
 
   const attackableHashes = useMemo(
     () => database?.hashes?.filter((hash) => hash.status === 'pending' || hash.status === 'failed') || [],
@@ -345,51 +309,6 @@ function AttackPanel() {
               </select>
             </div>
 
-            <div style={{
-              marginTop: '16px',
-              padding: '12px',
-              background: 'rgba(139, 92, 246, 0.08)',
-              border: '1px solid rgba(139, 92, 246, 0.25)',
-              borderRadius: '8px'
-            }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', display: 'block' }}>
-                {t('attack.quickHash.title')}
-              </label>
-              <p className="config-desc" style={{ margin: '0 0 8px 0' }}>
-                {t('attack.quickHash.description')}
-              </p>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <input
-                  type="text"
-                  className="input"
-                  value={quickSsid}
-                  onChange={(e) => setQuickSsid(e.target.value)}
-                  placeholder={t('attack.quickHash.ssidPlaceholder')}
-                  disabled={isActive || isGenerating}
-                  style={{ flex: '0 0 140px' }}
-                />
-                <input
-                  type="text"
-                  className="input"
-                  value={quickPassword}
-                  onChange={(e) => setQuickPassword(e.target.value)}
-                  placeholder={t('attack.quickHash.passwordPlaceholder')}
-                  disabled={isActive || isGenerating}
-                  style={{ flex: 1 }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleQuickHash()}
-                />
-              </div>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={handleQuickHash}
-                disabled={isActive || isGenerating || !quickPassword.trim()}
-                style={{ width: '100%' }}
-              >
-                <Zap size={14} />
-                {isGenerating ? ` ${t('attack.quickHash.generating')}` : ` ${t('attack.quickHash.create')}`}
-              </button>
-            </div>
-
             {importStatus && (
               <p
                 className="config-desc"
@@ -560,10 +479,30 @@ function AttackPanel() {
                   <span>{t('attack.speed')}</span>
                   <span>{formatSpeed(session?.speed || 0)}</span>
                 </div>
-                <div className="status-row">
-                  <span>{t('attack.progress')}</span>
-                  <span>{(session?.progress || 0).toFixed(2)}%</span>
+
+                <div className="attack-progress-section">
+                  <div className="attack-progress-header">
+                    <span>{t('attack.progress')}</span>
+                    <span className="attack-progress-pct">{(session?.progress || 0).toFixed(2)}%</span>
+                  </div>
+                  <div className="attack-progress-bar">
+                    <div
+                      className="attack-progress-fill"
+                      style={{ width: `${Math.min(100, session?.progress || 0)}%` }}
+                    />
+                  </div>
+                  <div className="attack-progress-details">
+                    <span>{formatNumber(session?.candidatesTested || 0)} / {formatNumber(session?.candidatesTotal || 0)}</span>
+                    {session?.eta > 0 && <span>ETA: {formatTime(session.eta)}</span>}
+                  </div>
                 </div>
+
+                {session?.currentCandidate && (
+                  <div className="status-row">
+                    <span>{t('progress.currentCandidate')}</span>
+                    <span className="font-mono" style={{ color: 'var(--accent-cyan)' }}>{session.currentCandidate}</span>
+                  </div>
+                )}
               </div>
             )}
 
