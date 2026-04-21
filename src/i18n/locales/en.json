@@ -7,8 +7,11 @@
   "header": {
     "educational": "Educational",
     "language": "Language",
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme",
     "languages": {
       "en": "English",
+      "ru": "Russian",
       "tk": "Turkmen"
     }
   },

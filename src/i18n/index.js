@@ -1,12 +1,14 @@
 import en from './locales/en.json';
+import ru from './locales/ru.json';
 import tk from './locales/tk.json';
 
-export const SUPPORTED_LANGUAGES = ['en', 'tk'];
+export const SUPPORTED_LANGUAGES = ['en', 'ru', 'tk'];
 export const DEFAULT_LANGUAGE = 'en';
 export const LANGUAGE_STORAGE_KEY = 'hashcracker_language';
 
 const translations = {
   en,
+  ru,
   tk
 };
 

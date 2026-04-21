@@ -7,8 +7,11 @@
   "header": {
     "educational": "Okuw Maksatly",
     "language": "Dil",
+    "switchToLight": "Ak tema",
+    "switchToDark": "Garaňky tema",
     "languages": {
       "en": "Iňlisçe",
+      "ru": "Rusça",
       "tk": "Türkmençe"
     }
   },

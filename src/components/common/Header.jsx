@@ -1,9 +1,11 @@
-import { Menu, Shield, Wifi, X } from 'lucide-react';
+import { Menu, Moon, Shield, Sun, Wifi, X } from 'lucide-react';
 import { useI18n } from '../../context/I18nContext';
+import { useTheme } from '../../context/ThemeContext';
 import './Header.css';
 
 function Header({ onMenuToggle, menuOpen }) {
   const { language, changeLanguage, t } = useI18n();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="header">
@@ -25,6 +27,14 @@ function Header({ onMenuToggle, menuOpen }) {
       </div>
       
       <div className="header-right">
+        <button
+          className="theme-toggle btn-ghost"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? t('header.switchToLight') : t('header.switchToDark')}
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
         <label className="language-picker">
           <span>{t('header.language')}:</span>
           <select
@@ -33,6 +43,7 @@ function Header({ onMenuToggle, menuOpen }) {
             onChange={(event) => changeLanguage(event.target.value)}
           >
             <option value="en">{t('header.languages.en')}</option>
+            <option value="ru">{t('header.languages.ru')}</option>
             <option value="tk">{t('header.languages.tk')}</option>
           </select>
         </label>

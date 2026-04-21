@@ -1,10 +1,11 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 
 const HASHCAT_BIN = process.env.HASHCAT_BIN || 'hashcat';
 const CPU_LIMIT_BIN = process.env.CPU_LIMIT_BIN || 'cpulimit';
-const DATA_DIR = process.env.DATA_DIR || '/srv/hashcat-data';
+const DATA_DIR = process.env.DATA_DIR || path.join(os.tmpdir(), 'hashcracker-data');
 const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || '/opt/wordlists/rockyou.txt';
 const HASHCAT_WORKLOAD_PROFILE = process.env.HASHCAT_WORKLOAD_PROFILE || '1';
 const MAX_CPU_LIMIT_PERCENT = 30;
@@ -12,7 +13,8 @@ const parsedCpuLimit = Number(process.env.HASHCAT_CPU_LIMIT_PERCENT || MAX_CPU_L
 const HASHCAT_CPU_LIMIT_PERCENT = Number.isFinite(parsedCpuLimit)
   ? Math.min(Math.max(parsedCpuLimit, 1), MAX_CPU_LIMIT_PERCENT)
   : MAX_CPU_LIMIT_PERCENT;
-const HASHCAT_USE_CPULIMIT = process.env.HASHCAT_USE_CPULIMIT !== 'false';
+// Default: only use cpulimit if explicitly enabled (was enabled-by-default for Docker)
+const HASHCAT_USE_CPULIMIT = process.env.HASHCAT_USE_CPULIMIT === 'true';
 
 function isCpuLimitEnabled() {
   return Number.isFinite(HASHCAT_CPU_LIMIT_PERCENT)
@@ -73,7 +75,6 @@ async function runHashcat({
     '-w',
     HASHCAT_WORKLOAD_PROFILE,
     '--force',
-    '-D', '1',
     '--status',
     '--status-json',
     '--status-timer',

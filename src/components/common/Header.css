@@ -25,6 +25,22 @@
   border-radius: 8px;
 }
 
+.theme-toggle {
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  background: var(--bg-card-hover);
+  color: var(--accent-cyan);
+}
+
 .logo {
   display: flex;
   align-items: center;

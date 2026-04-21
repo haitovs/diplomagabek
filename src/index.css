@@ -3,15 +3,15 @@
    WiFi Password Cracking Simulation
    ============================================ */
 
-/* CSS Variables */
-:root {
+/* CSS Variables — Dark theme (default) */
+:root, [data-theme="dark"] {
   /* Background Colors */
   --bg-primary: #0a0a0f;
   --bg-secondary: #12121a;
   --bg-tertiary: #1a1a25;
   --bg-card: rgba(20, 20, 30, 0.85);
   --bg-card-hover: rgba(30, 30, 45, 0.9);
-  
+
   /* Accent Colors */
   --accent-green: #00ff88;
   --accent-green-dim: #00cc6a;
@@ -23,13 +23,14 @@
   --accent-red-dim: #cc3636;
   --accent-orange: #ff9500;
   --accent-yellow: #ffd000;
-  
+
   /* Text Colors */
   --text-primary: #ffffff;
   --text-secondary: #9999aa;
   --text-tertiary: #666677;
+  --text-muted: #666677;
   --text-hash: #00ff88;
-  
+
   /* Border & Effects */
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.15);
@@ -52,6 +53,43 @@
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 400ms ease;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg-primary: #f5f6fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eef0f5;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(245, 246, 250, 0.98);
+
+  --accent-green: #00a859;
+  --accent-green-dim: #008f4a;
+  --accent-cyan: #0095c2;
+  --accent-cyan-dim: #007ba3;
+  --accent-purple: #7c3aed;
+  --accent-purple-dim: #6d28d9;
+  --accent-red: #dc2626;
+  --accent-red-dim: #b91c1c;
+  --accent-orange: #ea580c;
+  --accent-yellow: #ca8a04;
+
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+  --text-muted: #a1a1aa;
+  --text-hash: #00a859;
+
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-hover: rgba(0, 0, 0, 0.15);
+  --glow-green: 0 0 16px rgba(0, 168, 89, 0.2);
+  --glow-cyan: 0 0 16px rgba(0, 149, 194, 0.2);
+  --glow-purple: 0 0 16px rgba(124, 58, 237, 0.2);
+  --glow-red: 0 0 16px rgba(220, 38, 38, 0.2);
+}
+
+[data-theme="light"] body {
+  background: var(--bg-primary);
 }
 
 /* Reset & Base */

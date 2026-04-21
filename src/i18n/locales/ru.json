@@ -1,0 +1,454 @@
+{
+  "app": {
+    "name": "HashCracker",
+    "subtitle": "Инструмент анализа безопасности WiFi",
+    "version": "v1.0.0"
+  },
+  "header": {
+    "educational": "Учебный",
+    "language": "Язык",
+    "switchToLight": "Светлая тема",
+    "switchToDark": "Тёмная тема",
+    "languages": {
+      "en": "Английский",
+      "ru": "Русский",
+      "tk": "Туркменский"
+    }
+  },
+  "nav": {
+    "dashboard": "Панель управления",
+    "database": "База хешей",
+    "attack": "Панель атаки",
+    "results": "Взломанные пароли",
+    "logs": "Журналы активности",
+    "wifi": "WiFi-сканер",
+    "tools": "Инструменты безопасности",
+    "about": "О Hashcat"
+  },
+  "page": {
+    "dashboard": "Панель управления",
+    "database": "База хешей",
+    "attack": "Панель атаки",
+    "results": "Взломанные пароли",
+    "logs": "Журналы активности",
+    "wifi": "WiFi-сканер",
+    "tools": "Инструменты безопасности",
+    "about": "О Hashcat",
+    "activeAttack": "Атака в процессе"
+  },
+  "stats": {
+    "totalHashes": "Всего хешей",
+    "cracked": "Взломано",
+    "pending": "В ожидании",
+    "currentSpeed": "Текущая скорость",
+    "successRate": "{{value}}% успешных",
+    "currentlyCracking": "сейчас взламывается: {{value}}",
+    "idle": "Простаивает",
+    "attackInProgress": "Атака выполняется",
+    "typeSplit": "{{pmkid}} PMKID / {{eapol}} EAPOL",
+    "zeroSpeed": "0 H/s"
+  },
+  "table": {
+    "search": "Поиск SSID, BSSID, ID...",
+    "all": "Все",
+    "allStatus": "Все статусы",
+    "allTypes": "Все типы",
+    "allComplexity": "Любая сложность",
+    "id": "ID",
+    "ssid": "SSID",
+    "bssid": "BSSID",
+    "type": "Тип",
+    "complexity": "Сложность",
+    "status": "Статус",
+    "failureReason": "Причина сбоя",
+    "actions": "Действия",
+    "addHash": "Добавить хеш",
+    "realOnlyAddDisabled": "В режиме реального бэкенда разрешены только импортированные реальные хеши.",
+    "generateTestHash": "Создать тестовый хеш",
+    "testHashTooltip": "Добавьте известный взламываемый hc22000 хеш (пароль: hashcat!) для проверки работы hashcat.",
+    "testHashGenerated": "Добавлено тестовых хешей: {{count}}. Используйте словарную атаку с rockyou.txt для взлома.",
+    "delete": "Удалить",
+    "viewDetails": "Подробнее",
+    "attack": "Атаковать",
+    "noDetails": "Нет данных",
+    "notApplicable": "-",
+    "showing": "Показано {{shown}} из {{total}} хешей",
+    "performanceNotice": "(Показаны первые 50 для производительности)",
+    "hashDetails": "Детали хеша",
+    "clientMac": "MAC клиента",
+    "password": "Пароль",
+    "hash": "Хеш",
+    "failure": "Сбой",
+    "cancel": "Отмена",
+    "addHashModalTitle": "Добавить хеш",
+    "addHashMode": "Режим ввода",
+    "addHashFromWord": "Из пароля",
+    "addHashFromHash": "Из строки хеша",
+    "addHashSsidPlaceholder": "например MyNetwork",
+    "addHashBssidPlaceholder": "например AA:BB:CC:DD:EE:FF",
+    "addHashClientPlaceholder": "например 11:22:33:44:55:66",
+    "addHashWord": "Пароль",
+    "addHashWordPlaceholder": "Введите значение...",
+    "addHashRaw": "Строка хеша (hc22000)",
+    "addHashRawPlaceholder": "WPA*01*... или WPA*02*...",
+    "addHashOptionalPassword": "Известный пароль (необязательно)",
+    "addHashMarkCracked": "Отметить как уже взломанный",
+    "addHashMarkCrackedHint": "Отметьте, если пароль уже известен и вы хотите импортировать как взломанный результат.",
+    "addHashCreate": "Добавить хеш",
+    "addHashAutoGenHint": "BSSID, MAC и хеш генерируются автоматически. Введите только SSID и пароль.",
+    "addHashCreated": "Хеш успешно добавлен.",
+    "addHashValidation": {
+      "generic": "Не удалось добавить хеш.",
+      "hashRequired": "Строка хеша обязательна.",
+      "wordRequired": "Пароль обязателен.",
+      "invalidHash": "Неверный формат hc22000 хеша.",
+      "duplicate": "Этот хеш уже существует в базе."
+    },
+    "supportedFormatsTitle": "Поддерживаемые форматы:",
+    "supportedFormat1": "WPA*01* — PMKID хеш",
+    "supportedFormat2": "WPA*02* — EAPOL хеш",
+    "supportedFormat3": "Полная hc22000 строка из hcxdumptool",
+    "supportedFormat4": "Один хеш в строке для массового импорта"
+  },
+  "status": {
+    "pending": "В ожидании",
+    "cracking": "Взламывается",
+    "cracked": "Взломан",
+    "failed": "Сбой"
+  },
+  "complexity": {
+    "easy": "Лёгкий",
+    "medium": "Средний",
+    "hard": "Сложный",
+    "unknown": "Неизвестно"
+  },
+  "sidebar": {
+    "totalHashes": "Всего хешей",
+    "cracked": "Взломано",
+    "successRate": "Успешность",
+    "live": "В ЭФИРЕ"
+  },
+  "attack": {
+    "backendBanner": {
+      "title": "Hashcat Backend",
+      "message": "— Все атаки (словарь, брутфорс, гибрид) выполняются на реальном hashcat. Импортируйте hc22000 хеши или используйте «Создать тестовый хеш» для начала."
+    },
+    "targetHash": "Целевой хеш",
+    "scanRealNetworks": "Сканировать реальные сети",
+    "generateSimulatedNetworks": "Создать симуляцию сетей",
+    "realOnlyImportHint": "Только реальный режим: импортируйте перехваченные hc22000 хеши из надёжного источника.",
+    "quickHash": {
+      "title": "Быстрое создание хеша",
+      "description": "Введите пароль для создания настоящего взламываемого WPA хеша, затем атакуйте.",
+      "ssidPlaceholder": "Имя сети",
+      "passwordPlaceholder": "Введите пароль для хеширования...",
+      "create": "Создать хеш и выбрать как цель",
+      "generating": "Создаётся..."
+    },
+    "importOnly": "Только импорт",
+    "importSuccess": "Импортировано реальных хешей: {{count}}.",
+    "importNoValidHashes": "В выбранном файле не найдены валидные hc22000 хеши.",
+    "importFailed": "Не удалось импортировать файл хешей.",
+    "scan": "Сканировать",
+    "generate": "Создать",
+    "scanning": "Сканирование...",
+    "generating": "Создаётся...",
+    "real": "Реальный",
+    "realPrefix": "Реальный",
+    "noTargetSelected": "Цель не выбрана",
+    "selectTarget": "Выбрать цель:",
+    "selectHashPlaceholder": "-- Выберите хеш --",
+    "attackMode": "Режим атаки",
+    "configuration": "Настройка",
+    "selectWordlist": "Выбрать словарь",
+    "words": "слов",
+    "serverWordlistPath": "Путь пресета сервера: {{path}}",
+    "mask": "Маска",
+    "maskLegend": {
+      "lowercase": "?l = a-z",
+      "uppercase": "?u = A-Z",
+      "digits": "?d = 0-9",
+      "special": "?s = спец. символы",
+      "all": "?a = все"
+    },
+    "keyspace": "Пространство ключей",
+    "estimatedTime": "Ожидаемое время",
+    "appendMask": "Добавить маску",
+    "hybridMaskDescription": "Добавляет маску к каждому слову: слово + {{mask}}",
+    "controls": "Управление",
+    "startAttack": "Начать атаку",
+    "pause": "Пауза",
+    "resume": "Продолжить",
+    "stop": "Стоп",
+    "status": "Статус",
+    "mode": "Режим",
+    "speed": "Скорость",
+    "progress": "Прогресс",
+    "passwordFound": "Пароль найден!",
+    "keyspaceExhausted": "Пространство ключей исчерпано. Попробуйте другую атаку.",
+    "invalidRealHashHint": "Реальный бэкенд требует валидный hc22000 хеш (WPA*01 или WPA*02). Сначала импортируйте реальный перехваченный хеш.",
+    "modes": {
+      "dictionary": {
+        "name": "Словарная атака"
+      },
+      "bruteforce": {
+        "name": "Атака перебором"
+      },
+      "hybrid": {
+        "name": "Гибридная атака"
+      }
+    },
+    "statusValues": {
+      "idle": "Простаивает",
+      "running": "Выполняется",
+      "paused": "Приостановлена",
+      "completed": "Завершена",
+      "exhausted": "Исчерпано",
+      "stopped": "Остановлена",
+      "failed": "Сбой"
+    },
+    "presets": {
+      "eightDigits": "8 цифр",
+      "eightLowercase": "8 строчных",
+      "commonPattern": "Обычный шаблон",
+      "wordPlusYear": "Слово + год",
+      "complexEight": "Сложные 8"
+    }
+  },
+  "progress": {
+    "title": "Прогресс взлома",
+    "running": "Выполняется",
+    "paused": "Приостановлена",
+    "progress": "Прогресс",
+    "speed": "Скорость",
+    "eta": "Осталось",
+    "tested": "Проверено",
+    "currentCandidate": "Текущий:",
+    "collectingData": "Сбор данных...",
+    "startToSee": "Запустите атаку, чтобы увидеть прогресс",
+    "tooltipSpeed": "Скорость",
+    "tooltipTested": "Проверено"
+  },
+  "activity": {
+    "title": "Журнал активности",
+    "entries": "{{count}} записей",
+    "empty": "Пока нет активности. Запустите атаку, чтобы увидеть логи.",
+    "unknownEntry": "Неизвестная запись журнала",
+    "log": {
+      "passwordFound": "Пароль найден: {{password}}",
+      "wordlistExhausted": "Словарь исчерпан, пароль не найден",
+      "keyspaceExhausted": "Пространство ключей исчерпано, пароль не найден",
+      "startDictionary": "Запуск словарной атаки на {{ssid}}",
+      "wordlistSelected": "Словарь: {{wordlist}} ({{size}} слов)",
+      "hashType": "Тип хеша: {{type}}",
+      "startBruteforce": "Запуск атаки перебором на {{ssid}}",
+      "maskSelected": "Маска: {{mask}}",
+      "keyspaceValue": "Пространство ключей: {{keyspace}}",
+      "startHybrid": "Запуск гибридной атаки на {{ssid}}",
+      "hybridConfig": "Словарь: {{wordlist}} + Маска: {{mask}}",
+      "totalKeyspace": "Всего пространства ключей: {{keyspace}}",
+      "attackPaused": "Атака приостановлена",
+      "attackResumed": "Атака продолжена",
+      "attackStopped": "Атака остановлена пользователем",
+      "invalidRealHash": "Невозможно запустить hashcat: выбранный хеш не в формате hc22000."
+    }
+  },
+  "results": {
+    "title": "Взломанные пароли",
+    "passwordsRecovered": "Восстановлено паролей: {{count}}",
+    "copyPassword": "Копировать пароль",
+    "export": "Экспорт",
+    "emptyTitle": "Пока нет взломанных паролей",
+    "emptyDescription": "Начните атаку на ожидающие хеши, чтобы восстановить пароли.",
+    "notAvailable": "N/A",
+    "unknown": "Неизвестно",
+    "exportFormatsTitle": "Форматы экспорта",
+    "formats": {
+      "csv": "CSV",
+      "json": "JSON",
+      "potfile": "Potfile"
+    },
+    "formatDescriptions": {
+      "csv": "Через запятую, совместим с Excel",
+      "json": "Структурированные данные для программного использования",
+      "potfile": "Формат hashcat hash:пароль"
+    }
+  },
+  "tools": {
+    "title": "Инструменты безопасности",
+    "hashIdentifier": "Определитель типа хеша",
+    "hashInput": "Вставьте образец хеша",
+    "detect": "Определить тип",
+    "passwordAnalyzer": "Анализатор надёжности пароля",
+    "passwordInput": "Введите пароль",
+    "analyze": "Анализировать",
+    "maskBuilder": "Конструктор масок",
+    "lowercase": "Строчные",
+    "uppercase": "Прописные",
+    "digits": "Цифры",
+    "symbols": "Символы",
+    "buildMask": "Создать маску",
+    "generatedMask": "Сгенерированная маска",
+    "score": "Балл",
+    "level": "Уровень",
+    "length": "Длина",
+    "resultName": "Название",
+    "resultMode": "Режим",
+    "resultConfidence": "Достоверность",
+    "notAvailable": "N/A",
+    "unknown": "Неизвестно",
+    "emptyMask": "(пусто)",
+    "levelValues": {
+      "very-weak": "Очень слабый",
+      "weak": "Слабый",
+      "medium": "Средний",
+      "strong": "Сильный",
+      "very-strong": "Очень сильный"
+    },
+    "feedback": {
+      "passwordEmpty": "Пароль пуст.",
+      "minEightChars": "Используйте не менее 8 символов.",
+      "minTwelveChars": "Используйте 12+ символов для лучшей безопасности.",
+      "mixCase": "Смешивайте прописные и строчные буквы.",
+      "addNumbers": "Добавьте цифры.",
+      "addSymbols": "Добавьте специальные символы.",
+      "avoidCommonPatterns": "Избегайте распространённых шаблонов."
+    },
+    "guide": {
+      "tryExamples": "Быстрый тест — нажмите, чтобы попробовать",
+      "hashDescription": "Вставьте любой хеш, чтобы определить его тип и номер режима hashcat. Нажмите пример ниже для мгновенной проверки.",
+      "passwordDescription": "Анализирует надёжность пароля по длине, разнообразию символов и шаблонам. Попробуйте эти примеры:",
+      "maskDescription": "Постройте маску для брутфорса, указав типы символов. Маска определяет, какие символы hashcat пробует в каждой позиции.",
+      "maskAllLower": "8 строчных",
+      "maskAllDigits": "8 цифр (PIN)",
+      "maskMixed": "Смешанный (Aa1!)"
+    }
+  },
+  "wordlists": {
+    "rockyouSample": {
+      "name": "RockYou Sample",
+      "description": "Небольшой локальный образец для быстрой симуляции и тестирования."
+    },
+    "rockyou": {
+      "name": "rockyou.txt",
+      "description": "Классический большой словарь из известных утечек паролей."
+    },
+    "top100k": {
+      "name": "Топ 100K распространённых",
+      "description": "Самые частые пароли с быстрым профилем выполнения."
+    },
+    "probableV2": {
+      "name": "Probable-v2 Top1575",
+      "description": "Вероятностный набор кандидатов, оптимизированный для реального взлома."
+    },
+    "wifiDefaults": {
+      "name": "Стандартные пароли WiFi",
+      "description": "Шаблоны паролей роутеров по умолчанию и стандартные учётные данные производителей."
+    }
+  },
+  "about": {
+    "headerTitle": "О Hashcat и взломе WiFi",
+    "headerSubtitle": "Понимание методов восстановления паролей WPA/WPA2",
+    "educationalOnlyTitle": "Только для образовательных целей",
+    "educationalOnlyBody": "Это приложение — симуляция для образовательных целей. Всегда получайте надлежащее разрешение перед тестированием безопасности любой сети.",
+    "whatIsHashcatTitle": "Что такое Hashcat?",
+    "whatIsHashcatBody": "Hashcat — одна из самых быстрых и продвинутых утилит восстановления паролей. Поддерживает множество стратегий атак и высокооптимизированные алгоритмы хеширования. Для тестирования WiFi hashcat обычно используется с перехваченными WPA/WPA2 рукопожатиями или PMKID.",
+    "features": {
+      "gpu": "GPU-ускорение",
+      "hashTypes": "300+ типов хешей",
+      "attackModes": "Множество режимов атак"
+    },
+    "wifiHashModesTitle": "Режимы хешей WiFi",
+    "wifiHashModesBody": "Hashcat использует определённые номера режимов (флаг -m) для разных типов хешей:",
+    "hashModes": {
+      "mode22000": "Современный формат WPA/WPA2 (рекомендуется)",
+      "mode2500": "Устаревшее WPA/WPA2 рукопожатие",
+      "mode16800": "Только PMKID атака"
+    },
+    "attackModesTitle": "Режимы атак",
+    "attackModes": {
+      "dictionary": "Проверяет пароли из файла-словаря. Наиболее эффективна с обширными словарями.",
+      "bruteforce": "Пробует все возможные комбинации символов по шаблону маски. Эффективна для коротких или предсказуемых паролей.",
+      "hybrid": "Сочетает словарь с маской. Пример: слово + ?d?d?d добавляет 3 цифры к каждому слову словаря."
+    },
+    "maskCharactersTitle": "Символы маски",
+    "maskCharactersBody": "Маски определяют наборы символов для атак перебором:",
+    "maskColumn": "Маска",
+    "characterSetColumn": "Набор символов",
+    "countColumn": "Количество",
+    "maskChars": {
+      "lowercase": "Строчные буквы (a-z)",
+      "uppercase": "Прописные буквы (A-Z)",
+      "digits": "Цифры (0-9)",
+      "special": "Специальные символы (!@#$...)",
+      "all": "Все печатные ASCII"
+    },
+    "exampleMasksTitle": "Примеры масок",
+    "exampleMasks": {
+      "one": "?d?d?d?d?d?d?d?d - 8-значный PIN (100 000 000 комбинаций)",
+      "two": "?u?l?l?l?l?l?d?d - Обычный шаблон вроде Welcome23",
+      "three": "?a?a?a?a?a?a?a?a - 8 символов из всего ASCII (6,6 квадриллиона)"
+    },
+    "hc22000Title": "Формат хеша hc22000",
+    "hc22000Body": "Современный hashcat использует формат hc22000 для WPA/WPA2 хешей:",
+    "hc22000Pmkid": "PMKID Хеш (WPA*01)",
+    "hc22000Eapol": "EAPOL Хеш (WPA*02)",
+    "resourcesTitle": "Внешние ресурсы",
+    "resources": {
+      "website": "hashcat.net - Официальный сайт",
+      "github": "Hashcat на GitHub",
+      "wiki": "Вики и документация Hashcat"
+    }
+  },
+  "db": {
+    "hashGenerator": "Генератор хешей",
+    "hashGeneratorDesc": "Введите пароль, чтобы создать настоящий WPA хеш. Затем скопируйте или добавьте в базу.",
+    "password": "Пароль",
+    "enterPassword": "Введите пароль...",
+    "generateHash": "Создать",
+    "copyHash": "Копировать",
+    "addToDb": "В базу",
+    "hashLine": "Хеш (hc22000)"
+  },
+  "wifi": {
+    "toolsAvailable": "Доступные инструменты перехвата",
+    "scanning": "Сканирование...",
+    "scanNetworks": "Сканировать WiFi",
+    "networksFound": "Найдено сетей: {{total}} ({{wpa}} WPA)",
+    "scanFailed": "Сканирование не удалось",
+    "scanningDescription": "Поиск ближайших WiFi сетей...",
+    "open": "Открытая",
+    "select": "Выбрать",
+    "channel": "Канал",
+    "security": "Безопасность",
+    "duration": "Длительность",
+    "seconds": "секунд",
+    "captureHandshake": "Перехват рукопожатия / PMKID",
+    "startCapture": "Начать перехват",
+    "stopCapture": "Остановить перехват",
+    "hashesCaptured": "Перехвачено хешей: {{count}}!",
+    "importToDatabase": "Импортировать в базу хешей",
+    "uploadPcap": "Загрузить .pcapng / .cap",
+    "converting": "Конвертация...",
+    "convertFailed": "Ошибка конвертации",
+    "noHashesInFile": "В загруженном файле не найдено WPA рукопожатий или PMKID.",
+    "emptyTitle": "Сети не отсканированы",
+    "emptyDescription": "Нажмите «Сканировать WiFi», чтобы найти ближайшие точки доступа. Также можно загрузить .pcapng файл напрямую. Тестируйте только свои авторизованные сети.",
+    "captureStatus": {
+      "starting": "Запуск...",
+      "capturing": "Перехват...",
+      "captured": "Перехвачено!",
+      "no_handshake": "Рукопожатие не найдено",
+      "failed": "Сбой",
+      "stopped": "Остановлено"
+    }
+  },
+  "errors": {
+    "wordlistExhausted": "Словарь исчерпан, пароль не найден",
+    "keyspaceExhausted": "Пространство ключей исчерпано, пароль не найден",
+    "keyspaceWordlistExhausted": "Пространство ключей/словарь исчерпаны",
+    "stoppedByUser": "Остановлено пользователем",
+    "invalidRealHash": "Выбранный хеш не в формате hc22000 для реального бэкенда.",
+    "hashcatFailed": "Hashcat не удалось запустить или он завершился с ошибкой."
+  }
+}
