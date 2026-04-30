@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Large local wordlists and personal capture data (do not commit)
+server/wordlists/rockyou.txt
+server/test-hashes/

@@ -184,6 +184,14 @@ export function CrackingProvider({ children }) {
           progress: job.progress || 0,
           candidatesTested: job.candidatesTested || 0,
           candidatesTotal: job.candidatesTotal || 0,
+          eta: (() => {
+            const tested = Number(job.candidatesTested) || 0;
+            const total = Number(job.candidatesTotal) || 0;
+            const speed = Number(job.speed) || 0;
+            if (speed <= 0 || total <= 0) return null;
+            const remaining = Math.max(total - tested, 0);
+            return remaining / speed;
+          })(),
           logs: job.logs || [],
           foundPassword: job.password || null,
           getElapsedTime: () => elapsedSeconds

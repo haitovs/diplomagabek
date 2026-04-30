@@ -158,6 +158,16 @@
     "noTargetSelected": "No target selected",
     "selectTarget": "Select Target:",
     "selectHashPlaceholder": "-- Select a hash --",
+    "pasteHashLabel": "Or paste an hc22000 hash:",
+    "pasteHashHint": "Paste a single line starting with WPA*01* (PMKID) or WPA*02* (EAPOL). Click \"Add Hash\" — it becomes the active target.",
+    "pasteSsidPlaceholder": "SSID (optional)",
+    "addPastedHash": "Add Hash",
+    "useExampleHash": "Insert example",
+    "useExampleHashTitle": "Insert hashcat's official mode-22000 example hash. Password: hashcat! (in demo wordlist).",
+    "pasteEmpty": "Hash field is empty.",
+    "pasteInvalid": "Not a valid hc22000 line. Must start with WPA*01* or WPA*02*.",
+    "pasteDuplicate": "This hash is already in the database.",
+    "pasteSuccess": "Hash added and selected as target.",
     "attackMode": "Attack Mode",
     "configuration": "Configuration",
     "selectWordlist": "Select Wordlist",
@@ -325,6 +335,10 @@
     }
   },
   "wordlists": {
+    "demo": {
+      "name": "Demo (Common Passwords)",
+      "description": "Small bundled list of common WiFi passwords — guaranteed to crack the demo target."
+    },
     "rockyouSample": {
       "name": "RockYou Sample",
       "description": "Small local sample for fast simulation and testing."
@@ -440,7 +454,25 @@
       "captured": "Captured!",
       "no_handshake": "No Handshake Found",
       "failed": "Failed",
-      "stopped": "Stopped"
+      "stopped": "Stopped",
+      "simulated": "Simulation Complete"
+    },
+    "simulatedTitle": "Capture Not Possible on This Mac",
+    "simulatedBody": "macOS does not allow injecting deauth frames or putting Wi-Fi into true monitor mode from user space. Please capture the handshake manually with wifite (instructions below), then use \"Upload .pcapng / .cap\" to import the file.",
+    "wifiteHowToTitle": "How to Capture with wifite",
+    "wifiteHowToIntro": "Run these commands in Terminal on a Linux machine (or a Linux VM with a USB Wi-Fi adapter that supports monitor mode):",
+    "wifiteStepInstall": "Install wifite (Kali / Parrot ship it; otherwise: sudo apt install wifite)",
+    "wifiteStepRun": "Run wifite with deauth + WPA capture targeting your network",
+    "wifiteStepConvert": "Convert the resulting .cap to hashcat .hc22000 format with hcxpcapngtool",
+    "wifiteStepImport": "Click \"Upload .pcapng / .cap\" above and select the captured file",
+    "captureProgress": "Capture progress",
+    "captureSimulationLogs": {
+      "monitor": "Putting wlan0 in monitor mode...",
+      "channel": "Locking on channel {{channel}}...",
+      "deauth": "Sending deauth frames to {{bssid}}...",
+      "waiting": "Listening for EAPOL handshake from {{ssid}}...",
+      "retry": "No handshake yet, retrying deauth...",
+      "timeout": "Capture window closed. No handshake captured."
     }
   },
   "errors": {

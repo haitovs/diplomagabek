@@ -16,7 +16,7 @@ import {
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useCracking } from '../../context/CrackingContext';
 import { useI18n } from '../../context/I18nContext';
-import { importHashes, importRealNetworks } from '../../services/database/hashDB';
+import { addHash, importHashes, importRealNetworks, saveDatabase } from '../../services/database/hashDB';
 import {
   PRESET_MASKS,
   WORDLISTS,
@@ -42,13 +42,52 @@ function AttackPanel() {
   const { t } = useI18n();
 
   const [attackMode, setAttackMode] = useState('dictionary');
-  const [wordlist, setWordlist] = useState('rockyou_sample');
+  const [wordlist, setWordlist] = useState('demo');
   const [mask, setMask] = useState('?d?d?d?d?d?d?d?d');
   const [hybridMask, setHybridMask] = useState('?d?d?d');
   const [targetHash, setTargetHash] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [pasteHash, setPasteHash] = useState('');
+  const [pasteSsid, setPasteSsid] = useState('');
   const importInputRef = useRef(null);
+
+  const EXAMPLE_HASH = 'WPA*01*4d4fe7aac3a2cecab195321ceb99a7d0*fc690c158264*f4747f87f9f4*686173686361742d6573736964***';
+
+  const handlePasteHash = () => {
+    if (!database) return;
+    const trimmed = pasteHash.trim();
+    if (!trimmed) {
+      setImportStatus({ type: 'error', message: t('attack.pasteEmpty') });
+      return;
+    }
+    try {
+      const created = addHash(database, {
+        source: 'hash',
+        hashLine: trimmed,
+        ssid: pasteSsid.trim() || 'Pasted'
+      });
+      saveDatabase(database);
+      refreshDatabase();
+      if (created) {
+        setTargetHash(created);
+        setSelectedHashes([created]);
+      }
+      setPasteHash('');
+      setPasteSsid('');
+      setImportStatus({ type: 'success', message: t('attack.pasteSuccess') });
+    } catch (err) {
+      const key = err.message;
+      const messageMap = {
+        'table.addHashValidation.hashRequired': t('attack.pasteEmpty'),
+        'table.addHashValidation.invalidHash': t('attack.pasteInvalid'),
+        'table.addHashValidation.duplicate': t('attack.pasteDuplicate')
+      };
+      setImportStatus({ type: 'error', message: messageMap[key] || t('attack.pasteInvalid') });
+    }
+  };
+
+  const handleUseExample = () => setPasteHash(EXAMPLE_HASH);
   const isElectron = !!window.electronAPI;
   const isHc22000Hash = (value) => typeof value === 'string' && /^WPA\*(01|02)\*/i.test(value.trim());
 
@@ -307,6 +346,50 @@ function AttackPanel() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="paste-hash-section">
+              <label>{t('attack.pasteHashLabel')}</label>
+              <textarea
+                className="input input-mono"
+                value={pasteHash}
+                onChange={(event) => setPasteHash(event.target.value)}
+                placeholder="WPA*01*...  /  WPA*02*..."
+                rows={3}
+                disabled={isActive}
+                style={{ fontSize: '0.78rem', resize: 'vertical', minHeight: '60px' }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  className="input"
+                  value={pasteSsid}
+                  onChange={(event) => setPasteSsid(event.target.value)}
+                  placeholder={t('attack.pasteSsidPlaceholder')}
+                  disabled={isActive}
+                  style={{ flex: '1 1 140px', minWidth: 0 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleUseExample}
+                  disabled={isActive}
+                  title={t('attack.useExampleHashTitle')}
+                >
+                  {t('attack.useExampleHash')}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={handlePasteHash}
+                  disabled={isActive || !pasteHash.trim()}
+                >
+                  {t('attack.addPastedHash')}
+                </button>
+              </div>
+              <p className="config-desc" style={{ marginTop: 6 }}>
+                {t('attack.pasteHashHint')}
+              </p>
             </div>
 
             {importStatus && (

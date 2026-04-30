@@ -37,6 +37,12 @@ export const PRESET_MASKS = [
 
 // Default wordlists
 export const WORDLISTS = {
+  demo: {
+    nameKey: 'wordlists.demo.name',
+    descriptionKey: 'wordlists.demo.description',
+    size: 40,
+    serverPath: 'server/wordlists/demo.txt'
+  },
   rockyou_sample: {
     nameKey: 'wordlists.rockyouSample.name',
     descriptionKey: 'wordlists.rockyouSample.description',

@@ -158,6 +158,16 @@
     "noTargetSelected": "Цель не выбрана",
     "selectTarget": "Выбрать цель:",
     "selectHashPlaceholder": "-- Выберите хеш --",
+    "pasteHashLabel": "Или вставьте hc22000 хеш:",
+    "pasteHashHint": "Вставьте одну строку, начинающуюся с WPA*01* (PMKID) или WPA*02* (EAPOL). Нажмите «Добавить хеш» — он станет активной целью.",
+    "pasteSsidPlaceholder": "SSID (необязательно)",
+    "addPastedHash": "Добавить хеш",
+    "useExampleHash": "Вставить пример",
+    "useExampleHashTitle": "Вставить официальный пример хеша hashcat для режима 22000. Пароль: hashcat! (есть в демо-словаре).",
+    "pasteEmpty": "Поле хеша пустое.",
+    "pasteInvalid": "Неверная строка hc22000. Должна начинаться с WPA*01* или WPA*02*.",
+    "pasteDuplicate": "Этот хеш уже в базе.",
+    "pasteSuccess": "Хеш добавлен и выбран как цель.",
     "attackMode": "Режим атаки",
     "configuration": "Настройка",
     "selectWordlist": "Выбрать словарь",
@@ -325,6 +335,10 @@
     }
   },
   "wordlists": {
+    "demo": {
+      "name": "Демо (популярные пароли)",
+      "description": "Небольшой встроенный список популярных паролей WiFi — гарантированно ломает демо-цель."
+    },
     "rockyouSample": {
       "name": "RockYou Sample",
       "description": "Небольшой локальный образец для быстрой симуляции и тестирования."
@@ -440,7 +454,25 @@
       "captured": "Перехвачено!",
       "no_handshake": "Рукопожатие не найдено",
       "failed": "Сбой",
-      "stopped": "Остановлено"
+      "stopped": "Остановлено",
+      "simulated": "Симуляция завершена"
+    },
+    "simulatedTitle": "На этом Mac захват невозможен",
+    "simulatedBody": "macOS не позволяет отправлять deauth-кадры и переводить Wi-Fi в настоящий monitor-режим из пользовательского пространства. Перехватите рукопожатие вручную с помощью wifite (инструкции ниже), затем загрузите файл через «Загрузить .pcapng / .cap».",
+    "wifiteHowToTitle": "Как перехватить через wifite",
+    "wifiteHowToIntro": "Выполните эти команды в терминале на Linux (или в Linux VM с USB Wi-Fi адаптером, поддерживающим monitor-режим):",
+    "wifiteStepInstall": "Установите wifite (Kali / Parrot — встроен; иначе: sudo apt install wifite)",
+    "wifiteStepRun": "Запустите wifite с deauth + захватом WPA для вашей сети",
+    "wifiteStepConvert": "Конвертируйте полученный .cap в формат hashcat .hc22000 через hcxpcapngtool",
+    "wifiteStepImport": "Нажмите «Загрузить .pcapng / .cap» выше и выберите файл",
+    "captureProgress": "Прогресс перехвата",
+    "captureSimulationLogs": {
+      "monitor": "Перевод wlan0 в monitor-режим...",
+      "channel": "Фиксация на канале {{channel}}...",
+      "deauth": "Отправка deauth-кадров на {{bssid}}...",
+      "waiting": "Ожидание EAPOL рукопожатия от {{ssid}}...",
+      "retry": "Рукопожатия пока нет, повторная отправка deauth...",
+      "timeout": "Окно перехвата закрыто. Рукопожатие не получено."
     }
   },
   "errors": {

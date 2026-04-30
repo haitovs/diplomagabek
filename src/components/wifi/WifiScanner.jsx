@@ -4,11 +4,13 @@ import {
   CheckCircle,
   Download,
   FileUp,
+  Info,
   Loader,
   Radio,
   RefreshCw,
   Shield,
   Square,
+  Terminal,
   Upload,
   Wifi,
   WifiOff
@@ -19,15 +21,12 @@ import { useI18n } from '../../context/I18nContext';
 import {
   checkWifiTools,
   convertPcapFile,
-  getCaptureStatus,
-  scanWifiNetworks,
-  startWifiCapture,
-  stopWifiCapture
+  scanWifiNetworks
 } from '../../services/hashcat/apiClient';
 import { addHash, saveDatabase } from '../../services/database/hashDB';
 import './WifiScanner.css';
 
-const CAPTURE_POLL_MS = 2000;
+const SIMULATION_TICK_MS = 1000;
 
 function SignalBars({ percent }) {
   const bars = 4;
@@ -52,12 +51,14 @@ function WifiScanner() {
   const [toolsInfo, setToolsInfo] = useState(null);
   const [toolsLoading, setToolsLoading] = useState(true);
 
-  // Capture state
-  const [captureId, setCaptureId] = useState(null);
+  // Simulated capture state (real capture isn't possible from macOS user space)
   const [captureStatus, setCaptureStatus] = useState(null);
   const [captureRunning, setCaptureRunning] = useState(false);
-  const [captureDuration, setCaptureDuration] = useState(60);
-  const pollRef = useRef(null);
+  const [captureDuration, setCaptureDuration] = useState(20);
+  const [captureProgress, setCaptureProgress] = useState(0);
+  const captureTimerRef = useRef(null);
+  const captureCancelledRef = useRef(false);
+  const captureSelfRef = useRef(null);
 
   // Pcap upload state
   const [convertedHashes, setConvertedHashes] = useState(null);
@@ -73,26 +74,12 @@ function WifiScanner() {
       .finally(() => setToolsLoading(false));
   }, []);
 
-  // Poll capture status
+  // Cleanup any running simulation timer on unmount
   useEffect(() => {
-    if (!captureId || !captureRunning) return;
-
-    pollRef.current = setInterval(async () => {
-      try {
-        const status = await getCaptureStatus(captureId);
-        setCaptureStatus(status);
-
-        if (status.status !== 'capturing' && status.status !== 'starting') {
-          setCaptureRunning(false);
-          clearInterval(pollRef.current);
-        }
-      } catch {
-        // Ignore poll errors
-      }
-    }, CAPTURE_POLL_MS);
-
-    return () => clearInterval(pollRef.current);
-  }, [captureId, captureRunning]);
+    return () => {
+      if (captureTimerRef.current) clearTimeout(captureTimerRef.current);
+    };
+  }, []);
 
   const handleScan = useCallback(async () => {
     setScanning(true);
@@ -108,35 +95,79 @@ function WifiScanner() {
     }
   }, []);
 
-  const handleStartCapture = useCallback(async () => {
-    if (!selectedNetwork) return;
+  const appendCaptureLog = useCallback((message) => {
+    setCaptureStatus((prev) => ({
+      status: prev?.status || 'capturing',
+      logs: [
+        ...(prev?.logs || []),
+        { timestamp: new Date().toISOString(), message }
+      ]
+    }));
+  }, []);
 
-    setCaptureStatus(null);
+  const handleStartCapture = useCallback(() => {
+    if (!selectedNetwork || captureRunning) return;
+
+    captureCancelledRef.current = false;
+    setCaptureProgress(0);
+    setCaptureStatus({ status: 'capturing', logs: [] });
     setCaptureRunning(true);
 
-    try {
-      const result = await startWifiCapture({
-        bssid: selectedNetwork.bssid,
-        ssid: selectedNetwork.ssid,
-        channel: selectedNetwork.channel,
-        duration: captureDuration
-      });
-      setCaptureId(result.captureId);
-    } catch (err) {
-      setCaptureRunning(false);
-      setCaptureStatus({ status: 'failed', failReason: err.message, logs: [] });
-    }
-  }, [selectedNetwork, captureDuration]);
+    const totalSeconds = Math.max(10, Math.min(60, Number(captureDuration) || 20));
+    const startTime = Date.now();
 
-  const handleStopCapture = useCallback(async () => {
-    if (!captureId) return;
-    try {
-      await stopWifiCapture(captureId);
-      setCaptureRunning(false);
-    } catch {
-      // Ignore
+    const scriptedSteps = [
+      { atFraction: 0.05, key: 'wifi.captureSimulationLogs.monitor' },
+      { atFraction: 0.18, key: 'wifi.captureSimulationLogs.channel', vars: { channel: selectedNetwork.channel } },
+      { atFraction: 0.32, key: 'wifi.captureSimulationLogs.deauth', vars: { bssid: selectedNetwork.bssid } },
+      { atFraction: 0.5, key: 'wifi.captureSimulationLogs.waiting', vars: { ssid: selectedNetwork.ssid } },
+      { atFraction: 0.72, key: 'wifi.captureSimulationLogs.retry' },
+      { atFraction: 0.92, key: 'wifi.captureSimulationLogs.waiting', vars: { ssid: selectedNetwork.ssid } }
+    ];
+    let nextStep = 0;
+
+    const tick = () => {
+      if (captureCancelledRef.current) return;
+
+      const elapsed = (Date.now() - startTime) / 1000;
+      const fraction = Math.min(1, elapsed / totalSeconds);
+      setCaptureProgress(fraction * 100);
+
+      while (nextStep < scriptedSteps.length && fraction >= scriptedSteps[nextStep].atFraction) {
+        const step = scriptedSteps[nextStep];
+        appendCaptureLog(t(step.key, step.vars || {}));
+        nextStep++;
+      }
+
+      if (fraction >= 1) {
+        appendCaptureLog(t('wifi.captureSimulationLogs.timeout'));
+        setCaptureStatus((prev) => ({
+          status: 'simulated',
+          failReason: 'wifi.simulatedTitle',
+          logs: prev?.logs || []
+        }));
+        setCaptureRunning(false);
+        return;
+      }
+
+      captureTimerRef.current = setTimeout(tick, SIMULATION_TICK_MS);
+    };
+
+    tick();
+  }, [selectedNetwork, captureRunning, captureDuration, appendCaptureLog, t]);
+
+  const handleStopCapture = useCallback(() => {
+    captureCancelledRef.current = true;
+    if (captureTimerRef.current) {
+      clearTimeout(captureTimerRef.current);
+      captureTimerRef.current = null;
     }
-  }, [captureId]);
+    setCaptureRunning(false);
+    setCaptureStatus((prev) => ({
+      status: 'stopped',
+      logs: prev?.logs || []
+    }));
+  }, []);
 
   const handleImportHashes = useCallback((hashes, ssid) => {
     if (!database || !hashes?.length) return 0;
@@ -304,47 +335,63 @@ function WifiScanner() {
       {/* Network list */}
       {!scanning && networks.length > 0 && (
         <div className="wifi-network-list">
-          {networks.map((network, idx) => (
-            <motion.div
-              key={network.bssid || `net-${idx}`}
-              className={`wifi-network-card glass-card ${selectedNetwork?.bssid === network.bssid ? 'selected' : ''} ${network.isOpen ? 'open-network' : ''}`}
-              onClick={() => network.isWPA && setSelectedNetwork(network)}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.005 }}
-            >
-              <SignalBars percent={network.signalPercent} />
+          {networks.map((network, idx) => {
+            const canSelect = !network.isOpen;
+            return (
+              <motion.div
+                key={network.bssid || `net-${idx}`}
+                className={`wifi-network-card glass-card ${selectedNetwork?.bssid === network.bssid ? 'selected' : ''} ${network.isOpen ? 'open-network' : ''}`}
+                onClick={() => {
+                  if (!canSelect) return;
+                  setSelectedNetwork(network);
+                  setTimeout(() => {
+                    captureSelfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 50);
+                }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: canSelect ? 1.005 : 1 }}
+                style={{ cursor: canSelect ? 'pointer' : 'not-allowed' }}
+              >
+                <SignalBars percent={network.signalPercent} />
 
-              <div className="wifi-network-info">
-                <div className="wifi-network-ssid">{network.ssid}</div>
-                <div className="wifi-network-meta">
-                  <span>{network.bssid}</span>
-                  <span>{network.signal} dBm</span>
+                <div className="wifi-network-info">
+                  <div className="wifi-network-ssid">{network.ssid}</div>
+                  <div className="wifi-network-meta">
+                    <span>{network.bssid}</span>
+                    <span>{network.signal} dBm</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="wifi-network-badges">
-                <span className="wifi-badge channel">CH {network.channel}</span>
-                {network.isWPA && <span className="wifi-badge wpa">{network.security}</span>}
-                {network.isOpen && <span className="wifi-badge open">{t('wifi.open')}</span>}
-              </div>
+                <div className="wifi-network-badges">
+                  <span className="wifi-badge channel">CH {network.channel}</span>
+                  {network.security && !network.isOpen && (
+                    <span className="wifi-badge wpa">{network.security}</span>
+                  )}
+                  {network.isOpen && <span className="wifi-badge open">{t('wifi.open')}</span>}
+                </div>
 
-              {network.isWPA && (
                 <div className="wifi-network-actions">
                   <button
                     className="btn btn-sm btn-secondary"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!canSelect) return;
                       setSelectedNetwork(network);
+                      setTimeout(() => {
+                        captureSelfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 50);
                     }}
+                    disabled={!canSelect}
+                    title={!canSelect ? t('wifi.open') : t('wifi.select')}
                   >
                     <Radio size={14} />
                     {t('wifi.select')}
                   </button>
                 </div>
-              )}
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
@@ -361,6 +408,7 @@ function WifiScanner() {
       <AnimatePresence>
         {selectedNetwork && (
           <motion.div
+            ref={captureSelfRef}
             className="wifi-capture-panel glass-card"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -430,6 +478,21 @@ function WifiScanner() {
                   </span>
                 </div>
 
+                {(captureRunning || captureProgress > 0) && (
+                  <div className="capture-progress">
+                    <div className="capture-progress-header">
+                      <span>{t('wifi.captureProgress')}</span>
+                      <span>{Math.floor(captureProgress)}%</span>
+                    </div>
+                    <div className="capture-progress-bar">
+                      <div
+                        className="capture-progress-fill"
+                        style={{ width: `${Math.min(100, captureProgress)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {captureStatus.logs?.length > 0 && (
                   <div className="capture-log">
                     {captureStatus.logs.map((log, i) => (
@@ -440,6 +503,45 @@ function WifiScanner() {
                         <span>{log.message}</span>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {captureStatus.status === 'simulated' && (
+                  <div className="capture-simulated-banner">
+                    <AlertTriangle size={20} />
+                    <div>
+                      <strong>{t('wifi.simulatedTitle')}</strong>
+                      <p>{t('wifi.simulatedBody')}</p>
+                    </div>
+                  </div>
+                )}
+
+                {(captureStatus.status === 'simulated' || captureStatus.status === 'stopped') && (
+                  <div className="wifite-instructions">
+                    <div className="wifite-instructions-header">
+                      <Terminal size={18} />
+                      <h4>{t('wifi.wifiteHowToTitle')}</h4>
+                    </div>
+                    <p className="wifite-instructions-intro">
+                      <Info size={14} /> {t('wifi.wifiteHowToIntro')}
+                    </p>
+                    <ol className="wifite-step-list">
+                      <li>
+                        <span>{t('wifi.wifiteStepInstall')}</span>
+                        <pre className="wifite-cmd">sudo apt install wifite hcxtools</pre>
+                      </li>
+                      <li>
+                        <span>{t('wifi.wifiteStepRun')}</span>
+                        <pre className="wifite-cmd">{`sudo wifite --kill -i wlan0 --wpa --bssid ${selectedNetwork.bssid}`}</pre>
+                      </li>
+                      <li>
+                        <span>{t('wifi.wifiteStepConvert')}</span>
+                        <pre className="wifite-cmd">{`hcxpcapngtool -o handshake.hc22000 hs/handshake_${(selectedNetwork.ssid || 'TARGET').replace(/\s+/g, '_')}.cap`}</pre>
+                      </li>
+                      <li>
+                        <span>{t('wifi.wifiteStepImport')}</span>
+                      </li>
+                    </ol>
                   </div>
                 )}
 

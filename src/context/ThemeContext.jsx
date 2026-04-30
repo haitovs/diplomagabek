@@ -7,7 +7,7 @@ const VALID_THEMES = ['dark', 'light'];
 function getInitialTheme() {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
   if (stored && VALID_THEMES.includes(stored)) return stored;
-  return 'dark';
+  return 'light';
 }
 
 export function ThemeProvider({ children }) {

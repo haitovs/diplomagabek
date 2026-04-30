@@ -192,7 +192,8 @@ async function runHashcat({
       return;
     }
 
-    const failReason = exitCode === 0
+    // Hashcat exit codes: 0 = cracked (handled above), 1 = exhausted, others = real errors
+    const failReason = (exitCode === 0 || exitCode === 1)
       ? 'errors.wordlistExhausted'
       : (lastStderrLine || `Hashcat exited with code ${exitCode}`);
 

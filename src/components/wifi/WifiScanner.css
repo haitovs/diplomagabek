@@ -408,3 +408,127 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ── Capture progress bar ── */
+
+.capture-progress {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.04));
+  border-radius: 8px;
+}
+
+.capture-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.capture-progress-bar {
+  height: 8px;
+  background: var(--surface-3, rgba(0, 0, 0, 0.08));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.capture-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan, #06b6d4), var(--accent-green, #22c55e));
+  transition: width 0.4s ease;
+}
+
+/* ── Simulated capture banner ── */
+
+.capture-simulated-banner {
+  margin-top: 14px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  border-radius: 10px;
+  color: var(--text-primary);
+}
+
+.capture-simulated-banner svg {
+  flex-shrink: 0;
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.capture-simulated-banner strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #b45309;
+}
+
+.capture-simulated-banner p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* ── wifite instructions ── */
+
+.wifite-instructions {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+}
+
+.wifite-instructions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.wifite-instructions-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.wifite-instructions-intro {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wifite-step-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wifite-step-list li {
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.wifite-cmd {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--surface-3, rgba(0, 0, 0, 0.08));
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: auto;
+}
+
+.capture-status-badge.simulated {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}

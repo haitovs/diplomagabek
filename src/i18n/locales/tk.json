@@ -158,6 +158,16 @@
     "noTargetSelected": "Maksat saýlanmady",
     "selectTarget": "Maksat saýla:",
     "selectHashPlaceholder": "-- Heş saýla --",
+    "pasteHashLabel": "Ýa-da hc22000 heşi goýuň:",
+    "pasteHashHint": "WPA*01* (PMKID) ýa-da WPA*02* (EAPOL) bilen başlaýan bir setir goýuň. «Heş Goş» basyň — ol nyşan bolar.",
+    "pasteSsidPlaceholder": "SSID (hökmany däl)",
+    "addPastedHash": "Heş Goş",
+    "useExampleHash": "Mysal goý",
+    "useExampleHashTitle": "Hashcat-yň 22000 režimi üçin resmi mysal heşini goýuň. Parol: hashcat! (demo wordlistde bar).",
+    "pasteEmpty": "Heş meýdany boş.",
+    "pasteInvalid": "Dogry hc22000 setir däl. WPA*01* ýa-da WPA*02* bilen başlamaly.",
+    "pasteDuplicate": "Bu heş onsuz hem maglumatlar bazasynda bar.",
+    "pasteSuccess": "Heş goşuldy we nyşan hökmünde saýlanyldy.",
     "attackMode": "Hüjüm Režimi",
     "configuration": "Sazlama",
     "selectWordlist": "Wordlist Saýla",
@@ -325,6 +335,10 @@
     }
   },
   "wordlists": {
+    "demo": {
+      "name": "Demo (Adaty Parollar)",
+      "description": "Adaty WiFi parollarynyň kiçi sanawy — demo nyşany hökman dörýär."
+    },
     "rockyouSample": {
       "name": "RockYou Nusgasy",
       "description": "Çalt simulýasiýa we synag üçin kiçi ýerli nusga."
@@ -440,7 +454,25 @@
       "captured": "Capture edildi!",
       "no_handshake": "Handshake Tapylmady",
       "failed": "Şowsuz",
-      "stopped": "Duruzyldy"
+      "stopped": "Duruzyldy",
+      "simulated": "Simulýasiýa Tamamlandy"
+    },
+    "simulatedTitle": "Bu Mac-da Capture Mümkin Däl",
+    "simulatedBody": "macOS deauth çarçuwalaryny ibermäge ýa-da Wi-Fi-ny hakyky monitor režimine geçirmäge rugsat bermeýär. Handshake-ni wifite arkaly el bilen alyň (aşakdaky görkezmeler), soňra «Upload .pcapng / .cap» bilen import ediň.",
+    "wifiteHowToTitle": "wifite bilen Capture Etmek",
+    "wifiteHowToIntro": "Bu buýruklary Linux terminalda ýerine ýetiriň (ýa-da monitor režimine goldaw berýän USB Wi-Fi adapter bilen Linux VM-de):",
+    "wifiteStepInstall": "wifite-ny gurnaň (Kali / Parrot bilen gelýär; başgaça: sudo apt install wifite)",
+    "wifiteStepRun": "wifite-ny deauth + WPA capture bilen öz networküňize garşy işlediň",
+    "wifiteStepConvert": "Alnan .cap faýly hcxpcapngtool bilen hashcat .hc22000 formatyna öwüriň",
+    "wifiteStepImport": "Ýokardaky «Upload .pcapng / .cap» düwmesine basyň we faýly saýlaň",
+    "captureProgress": "Capture progressi",
+    "captureSimulationLogs": {
+      "monitor": "wlan0 monitor režimine geçirilýär...",
+      "channel": "{{channel}} kanalynda gulplanýar...",
+      "deauth": "{{bssid}} üçin deauth çarçuwalary iberilýär...",
+      "waiting": "{{ssid}}-den EAPOL handshake-e garaşylýar...",
+      "retry": "Henizem handshake ýok, deauth gaýtadan iberilýär...",
+      "timeout": "Capture penjiresi ýapyldy. Handshake alynmady."
     }
   },
   "errors": {

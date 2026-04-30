@@ -21,11 +21,16 @@ const upload = multer({ dest: '/tmp/hashcracker-uploads/', limits: { fileSize: 1
 
 const PORT = Number(process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
-const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || '/opt/wordlists/rockyou.txt';
+const __serverFile = fileURLToPath(import.meta.url);
+const __serverDir = path.dirname(__serverFile);
+const LOCAL_DEMO_WORDLIST = path.resolve(__serverDir, '../wordlists/demo.txt');
+const LOCAL_ROCKYOU_WORDLIST = path.resolve(__serverDir, '../wordlists/rockyou.txt');
+const DEFAULT_WORDLIST_PATH = process.env.WORDLIST_PATH || LOCAL_DEMO_WORDLIST;
 const HC22000_REGEX = /^WPA\*(01|02)\*/i;
 const WORDLIST_PRESETS = {
+  demo: process.env.WORDLIST_DEMO_PATH || LOCAL_DEMO_WORDLIST,
   rockyou_sample: process.env.WORDLIST_ROCKYOU_SAMPLE_PATH || '/opt/wordlists/rockyou_sample.txt',
-  rockyou: process.env.WORDLIST_ROCKYOU_PATH || DEFAULT_WORDLIST_PATH,
+  rockyou: process.env.WORDLIST_ROCKYOU_PATH || LOCAL_ROCKYOU_WORDLIST,
   top_100k: process.env.WORDLIST_TOP_100K_PATH || '/opt/wordlists/top-100k.txt',
   probable_v2: process.env.WORDLIST_PROBABLE_V2_PATH || '/opt/wordlists/probable-v2-top1575.txt',
   wifi_defaults: process.env.WORDLIST_WIFI_DEFAULTS_PATH || '/opt/wordlists/wifi-defaults.txt'

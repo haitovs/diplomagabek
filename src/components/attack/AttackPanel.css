@@ -358,3 +358,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.paste-hash-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border, rgba(0, 0, 0, 0.1));
+}
+
+.paste-hash-section label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
